@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx_issues',  # if this is missing, pip install sphinx-issues
     'sphinx_tabs.tabs',  # if this is missing, pip install sphinx-tabs
+    'versionwarning.extension',
     ]
 
 try: import rst2pdf
@@ -465,3 +466,13 @@ pdf_use_numbered_links = False
 
 # Background images fitting mode
 pdf_fit_background_mode = 'scale'
+
+versionwarning_messages = {
+    "latest": (
+        "This document is for the development version. "
+        'For the stable version documentation, see <a href="/en/stable/">here</a>.'
+    ),
+}
+
+versionwarning_body_selector = "div.document"
+versionwarning_banner_title = ""

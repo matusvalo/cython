@@ -810,17 +810,19 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
         self._put_setup_code(code, "PythonCompatibility")
         self._put_setup_code(code, "MathInitCode")
 
+        pyx_mark_err_pos_format = """#define __PYX_MARK_ERR_POS(f_index, lineno) \\
+    {{ {pyx_fname} = {pyx_f}[f_index]; (void){pyx_fname}; {pyx_lineno} = lineno; (void){pyx_lineno}; {cinfo}}}"""
+        pyx_mark_err_pos = pyx_mark_err_pos_format.format(pyx_fname=Naming.filename_cname, pyx_f=Naming.filetable_cname, pyx_lineno=Naming.lineno_cname, cinfo="")
         # Using "(void)cname" to prevent "unused" warnings.
         if options.c_line_in_traceback:
             cinfo = "%s = %s; (void)%s; " % (Naming.clineno_cname, Naming.line_c_macro, Naming.clineno_cname)
+            code.putln("#if defined(CYTHON_CLINE_IN_TRACEBACK)")
+            code.putln(pyx_mark_err_pos_format.format(pyx_fname=Naming.filename_cname, pyx_f=Naming.filetable_cname, pyx_lineno=Naming.lineno_cname, cinfo=cinfo))
+            code.putln("#else")
+            code.putln(pyx_mark_err_pos)
+            code.putln("#endif")
         else:
-            cinfo = ""
-        code.putln("#define __PYX_MARK_ERR_POS(f_index, lineno) \\")
-        code.putln("    { %s = %s[f_index]; (void)%s; %s = lineno; (void)%s; %s}" % (
-            Naming.filename_cname, Naming.filetable_cname, Naming.filename_cname,
-            Naming.lineno_cname, Naming.lineno_cname,
-            cinfo
-        ))
+            code.putln(pyx_mark_err_pos)
         code.putln("#define __PYX_ERR(f_index, lineno, Ln_error) \\")
         code.putln("    { __PYX_MARK_ERR_POS(f_index, lineno) goto Ln_error; }")
 

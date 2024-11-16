@@ -310,6 +310,7 @@ static CYTHON_INLINE int __Pyx_PyObject_IsTrueAndDecref(PyObject* x) {
     return retval;
 }
 
+{{if cyshared is False}}
 static PyObject* __Pyx_PyNumber_LongWrongResultType(PyObject* result) {
     __Pyx_TypeName result_type_name = __Pyx_PyType_GetName(Py_TYPE(result));
     if (PyLong_Check(result)) {
@@ -333,6 +334,7 @@ static PyObject* __Pyx_PyNumber_LongWrongResultType(PyObject* result) {
     Py_DECREF(result);
     return NULL;
 }
+{{else}}{{endif}}
 
 static CYTHON_INLINE PyObject* __Pyx_PyNumber_Long(PyObject* x) {
 #if CYTHON_USE_TYPE_SLOTS

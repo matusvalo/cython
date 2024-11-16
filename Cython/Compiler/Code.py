@@ -1495,7 +1495,8 @@ class GlobalState:
         # utility_code_def
         #
         code = self.parts['utility_code_def']
-        util = TempitaUtilityCode.load_cached("TypeConversions", "TypeConversion.c")
+        # breakpoint()
+        util = TempitaUtilityCode.load_cached("TypeConversions", "TypeConversion.c", context={'cyshared': Options.cyshared})
         code.put(util.format_code(util.impl))
         code.putln("")
 

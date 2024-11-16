@@ -7,6 +7,7 @@ from .StringEncoding import EncodedString
 from .Symtab import BuiltinScope, StructOrUnionScope, ModuleScope, Entry
 from .Code import UtilityCode, TempitaUtilityCode
 from .TypeSlots import Signature
+from . import Options
 from . import PyrexTypes
 
 
@@ -144,7 +145,7 @@ builtin_function_table = [
                                   PyrexTypes.c_longdouble_complex_type)
                         ) + [
     BuiltinFunction('abs',        "O",    "O",     "__Pyx_PyNumber_Absolute",
-                    utility_code=UtilityCode.load("py_abs", "Builtins.c")),
+                    utility_code=TempitaUtilityCode.load("py_abs", "Builtins.c", context={'cyshared': Options.cyshared})),
     #('all',       "",     "",      ""),
     #('any',       "",     "",      ""),
     #('ascii',     "",     "",      ""),
@@ -212,7 +213,7 @@ builtin_function_table = [
     for c_type in [PyrexTypes.c_char_type, PyrexTypes.c_schar_type, PyrexTypes.c_uchar_type]
 ] + [
     BuiltinFunction('ord',        None,    None,   "__Pyx_PyObject_Ord",
-                    utility_code=UtilityCode.load_cached("object_ord", "Builtins.c"),
+                    utility_code=TempitaUtilityCode.load_cached("object_ord", "Builtins.c", context={'cyshared': Options.cyshared}),
                     func_type=PyrexTypes.CFuncType(
                         PyrexTypes.c_long_type, [
                             PyrexTypes.CFuncTypeArg("c", PyrexTypes.py_object_type, None)

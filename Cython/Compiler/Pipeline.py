@@ -33,6 +33,17 @@ def parse_stage_factory(context):
         tree.compilation_source = compsrc
         tree.scope = scope
         tree.is_pxd = False
+
+        if Options.cyshared:
+            ############## INJECTING cyshared #################
+            context.include_directories.append('.')
+            scope = context.find_module('cyshared')
+            for e in scope.cfunc_entries:
+                e.cname = e.name
+                e.used = 1
+            tree.scope.cimported_modules.append(scope)
+            ############## INJECTING cyshared #################
+
         return tree
     return parse
 
@@ -228,6 +239,43 @@ def create_pipeline(context, mode, exclude_classes=()):
     if exclude_classes:
         stages = [s for s in stages if s.__class__ not in exclude_classes]
     return stages
+
+def create_dummy_pipeline(context, scope, options, result):
+
+
+    def parse_dummy_stage_factory(context):
+        def parse(compsrc):
+            from .Code import TempitaUtilityCode
+            source_desc = compsrc.source_desc
+            full_module_name = compsrc.full_module_name
+
+            tree = context.dummy_parse(source_desc, scope, pxd=False, full_module_name=full_module_name)
+            tree.is_pxd = False
+
+            tree.compilation_source = compsrc
+            tree.scope = scope
+
+            ############## INJECTING PXD shared definitions #################
+            s = context.find_module('cyshared')
+            scope.cfunc_entries = s.cfunc_entries
+            scope.cfunc_entries[1].utility_code = TempitaUtilityCode.load_cached("object_ord", "Builtins.c", context={'cyshared': False})
+            scope.cfunc_entries[2].utility_code = TempitaUtilityCode.load("py_abs", "Builtins.c", context={'cyshared': False})
+            for e in scope.cfunc_entries:
+                e.cname = e.name # Aviods mangling C name
+                e.used = 1       # Forces generating prototype of function
+            ############## INJECTING PXD shared definitions #################
+            return tree
+        return parse
+
+    return list(itertools.chain(
+        [parse_dummy_stage_factory(context)],
+        create_pipeline(context, 'pyx', exclude_classes=()),
+        [inject_pxd_code_stage_factory(context),
+         inject_utility_code_stage_factory(context),
+         abort_on_errors],
+        [generate_pyx_code_stage_factory(options, result)],
+    ))
+
 
 def create_pyx_pipeline(context, options, result, py=False, exclude_classes=()):
     mode = 'py' if py else 'pyx'

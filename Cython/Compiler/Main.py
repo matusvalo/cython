@@ -358,9 +358,17 @@ class Context:
             self.modules[name] = scope
         return scope
 
+    def dummy_parse(self, source_desc, scope, pxd, full_module_name):
+        from . import Parsing
+        scope.cpp = self.cpp
+        s = PyrexScanner(io.StringIO(''.join(source_desc.get_lines())), source_desc, source_encoding = 'utf8',
+                         scope = scope, context = self)
+        tree = Parsing.p_module(s, pxd, full_module_name)
+        return tree
+
     def parse(self, source_desc, scope, pxd, full_module_name):
-        if not isinstance(source_desc, FileSourceDescriptor):
-            raise RuntimeError("Only file sources for code supported")
+        # if not isinstance(source_desc, FileSourceDescriptor):
+        #     raise RuntimeError("Only file sources for code supported")
         source_filename = source_desc.filename
         scope.cpp = self.cpp
         # Parse the given source file and return a parse tree.

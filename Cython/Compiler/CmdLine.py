@@ -161,6 +161,7 @@ Environment variables:
     parser.add_argument('sources', nargs='*', default=[])
 
     # TODO: add help
+    parser.add_argument("--cyshared", dest='cyshared', action='store_true', help=SUPPRESS)
     parser.add_argument("-z", "--pre-import", dest='pre_import', action='store', type=str, help=SUPPRESS)
     parser.add_argument("--convert-range", dest='convert_range', action='store_true', help=SUPPRESS)
     parser.add_argument("--no-c-in-traceback", dest='c_line_in_traceback', action='store_false', help=SUPPRESS)

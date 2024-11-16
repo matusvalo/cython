@@ -27,7 +27,7 @@ from . import MatchCaseNodes
 from . import Builtin
 from . import StringEncoding
 from .StringEncoding import EncodedString, bytes_literal
-from .ModuleNode import ModuleNode
+from .ModuleNode import ModuleNode, CySharedModuleNode
 from .Errors import error, warning
 from .. import Utils
 from . import Future
@@ -4216,7 +4216,8 @@ def p_module(s: PyrexScanner, pxd, full_module_name, ctx=Ctx):
     if s.sy != 'EOF':
         s.error("Syntax error in statement [%s,%s]" % (
             repr(s.sy), repr(s.systring)))
-    return ModuleNode(pos, doc = doc, body = body,
+    klass = CySharedModuleNode if Options.generate_cyshared else ModuleNode
+    return klass(pos, doc = doc, body = body,
                       full_module_name = full_module_name,
                       directive_comments = directive_comments)
 

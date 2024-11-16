@@ -248,7 +248,9 @@ static CYTHON_INLINE PY_LONG_LONG __Pyx_abs_longlong(PY_LONG_LONG x) {
 //////////////////// py_abs.proto ////////////////////
 
 #if CYTHON_USE_PYLONG_INTERNALS
+{{if cyshared is False}}
 static PyObject *__Pyx_PyLong_AbsNeg(PyObject *num);/*proto*/
+{{else}}{{endif}}
 
 #define __Pyx_PyNumber_Absolute(x) \
     ((likely(PyLong_CheckExact(x))) ? \
@@ -261,6 +263,7 @@ static PyObject *__Pyx_PyLong_AbsNeg(PyObject *num);/*proto*/
 
 //////////////////// py_abs ////////////////////
 
+{{if cyshared is False}}
 #if CYTHON_USE_PYLONG_INTERNALS
 static PyObject *__Pyx_PyLong_AbsNeg(PyObject *n) {
 #if PY_VERSION_HEX >= 0x030C00A7
@@ -292,6 +295,7 @@ static PyObject *__Pyx_PyLong_AbsNeg(PyObject *n) {
 #endif
 }
 #endif
+{{else}}{{endif}}
 
 
 //////////////////// pow2.proto ////////////////////
@@ -385,10 +389,13 @@ static double __Pyx_double_from_UCS4(Py_UCS4 uchar) {
 
 #define __Pyx_PyObject_Ord(c) \
     (likely(PyUnicode_Check(c)) ? (long)__Pyx_PyUnicode_AsPy_UCS4(c) : __Pyx__PyObject_Ord(c))
+{{if cyshared is False}}
 static long __Pyx__PyObject_Ord(PyObject* c); /*proto*/
+{{else}}{{endif}}
 
 //////////////////// object_ord ////////////////////
 
+{{if cyshared is False}}
 static long __Pyx__PyObject_Ord(PyObject* c) {
     Py_ssize_t size;
     if (PyBytes_Check(c)) {
@@ -432,6 +439,7 @@ static long __Pyx__PyObject_Ord(PyObject* c) {
         "ord() expected a character, but string of length %zd found", size);
     return (long)(Py_UCS4)-1;
 }
+{{else}}{{endif}}
 
 
 //////////////////// py_dict_keys.proto ////////////////////

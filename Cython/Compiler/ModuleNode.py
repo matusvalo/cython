@@ -620,6 +620,7 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
         tb.serialize()
 
     def find_referenced_modules(self, env, module_list, modules_seen):
+        # breakpoint()
         if env not in modules_seen:
             modules_seen[env] = 1
             for imported_module in env.cimported_modules:
@@ -889,7 +890,8 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
             c_string_func_name = c_string_type.title()
         code.putln(f'#define __Pyx_PyObject_FromString __Pyx_Py{c_string_func_name}_FromString')
         code.putln(f'#define __Pyx_PyObject_FromStringAndSize __Pyx_Py{c_string_func_name}_FromStringAndSize')
-        code.put(UtilityCode.load_as_string("TypeConversions", "TypeConversion.c")[0])
+        # breakpoint()
+        code.put(TempitaUtilityCode.load_as_string("TypeConversions", "TypeConversion.c", context={'cyshared': Options.cyshared})[0])
         env.use_utility_code(UtilityCode.load_cached("FormatTypeName", "ObjectHandling.c"))
 
         # These utility functions are assumed to exist and used elsewhere.
@@ -1430,6 +1432,7 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
             env.use_entry_utility_code(entry)
 
     def generate_cfunction_declarations(self, env, code, definition):
+        # breakpoint()
         for entry in env.cfunc_entries:
             from_pyx = Options.cimport_from_pyx and not entry.visibility == 'extern'
             if (entry.used
@@ -3015,6 +3018,9 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
         code.putln(f'Py_VISIT(traverse_module_state->{Naming.fusedfunction_type_cname});')
         code.putln('#endif')
 
+    def generate_execution_code(self, env, code):
+        self.body.generate_execution_code(code)
+
     def generate_module_init_func(self, imported_modules, env, code):
         subfunction = self.mod_init_subfunction(self.pos, self.scope, code)
 
@@ -3203,6 +3209,7 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
                 self.generate_c_variable_import_code_for_module(module, env, inner_code)
 
         with subfunction("Function import code") as inner_code:
+            # breakpoint()
             for module in imported_modules:
                 self.specialize_fused_types(module)
                 self.generate_c_function_import_code_for_module(module, env, inner_code)
@@ -3216,7 +3223,7 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
             code.funcstate.can_trace = True
 
         code.mark_pos(None)
-        self.body.generate_execution_code(code)
+        self.generate_execution_code(env, code)
         code.mark_pos(None)
 
         if profile or linetrace:
@@ -4022,6 +4029,12 @@ class ModuleImportGenerator:
         for temp in self.temps:
             code.put_decref_clear(temp, py_object_type)
             code.funcstate.release_temp(temp)
+
+
+class CySharedModuleNode(ModuleNode):
+    def generate_execution_code(self, env, code):
+        for e in env.cfunc_entries:
+            code.globalstate.use_entry_utility_code(e)
 
 
 def generate_cfunction_declaration(entry, env, code, definition):

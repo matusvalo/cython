@@ -813,6 +813,7 @@ context = {
     'memviewslice_name': memviewslice_cname,
     'memslice_init': PyrexTypes.MemoryViewSliceType.default_value,
     'THREAD_LOCKS_PREALLOCATED': 8,
+    'cyshared': Options.cyshared
 }
 memviewslice_declare_code = load_memview_c_utility(
         "MemviewSliceStruct",

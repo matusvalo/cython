@@ -663,7 +663,7 @@ def load_buffer_utility(util_code_name, context=None, **kwargs):
     else:
         return TempitaUtilityCode.load(util_code_name, "Buffer.c", context=context, **kwargs)
 
-context = dict(max_dims=Options.buffer_max_dims)
+context = dict(max_dims=Options.buffer_max_dims, cyshared=Options.cyshared)
 buffer_struct_declare_code = load_buffer_utility("BufferStructDeclare", context=context)
 buffer_formats_declare_code = load_buffer_utility("BufferFormatStructs")
 

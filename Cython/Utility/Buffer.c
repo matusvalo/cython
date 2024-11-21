@@ -98,13 +98,19 @@ typedef struct {
     (__Pyx_ZeroBuffer(buf), 0) : \
     __Pyx__GetBufferAndValidate(buf, obj, dtype, flags, nd, cast, stack))
 
+
+{{if cyshared is False}}
 static int  __Pyx__GetBufferAndValidate(Py_buffer* buf, PyObject* obj,
     __Pyx_TypeInfo* dtype, int flags, int nd, int cast, __Pyx_BufFmt_StackElem* stack);
 static void __Pyx_ZeroBuffer(Py_buffer* buf);
+{{else}}{{endif}}
+
 static CYTHON_INLINE void __Pyx_SafeReleaseBuffer(Py_buffer* info);/*proto*/
 
+{{if cyshared is False}}
 static Py_ssize_t __Pyx_minusones[] = { {{ ", ".join(["-1"] * max_dims) }} };
 static Py_ssize_t __Pyx_zeros[] = { {{ ", ".join(["0"] * max_dims) }} };
+{{else}}{{endif}}
 
 
 /////////////// BufferGetAndValidate ///////////////
@@ -116,6 +122,7 @@ static CYTHON_INLINE void __Pyx_SafeReleaseBuffer(Py_buffer* info) {
   PyBuffer_Release(info);
 }
 
+{{if cyshared is False}}
 static void __Pyx_ZeroBuffer(Py_buffer* buf) {
   buf->buf = NULL;
   buf->obj = NULL;
@@ -158,6 +165,7 @@ fail:;
   __Pyx_SafeReleaseBuffer(buf);
   return -1;
 }
+{{else}}{{endif}}
 
 
 /////////////// BufferFormatCheck.proto ///////////////
@@ -174,15 +182,18 @@ fail:;
 //
 //  The alignment code is copied from _struct.c in Python.
 
+{{if cyshared is False}}
 static const char* __Pyx_BufFmt_CheckString(__Pyx_BufFmt_Context* ctx, const char* ts);
 static void __Pyx_BufFmt_Init(__Pyx_BufFmt_Context* ctx,
                               __Pyx_BufFmt_StackElem* stack,
                               __Pyx_TypeInfo* type); /*proto*/
+{{else}}{{endif}}
 
 /////////////// BufferFormatCheck ///////////////
 //@requires: ModuleSetupCode.c::IsLittleEndian
 //@requires: BufferFormatStructs
 
+{{if cyshared is False}}
 static void __Pyx_BufFmt_Init(__Pyx_BufFmt_Context* ctx,
                               __Pyx_BufFmt_StackElem* stack,
                               __Pyx_TypeInfo* type) {
@@ -305,6 +316,7 @@ static size_t __Pyx_BufFmt_TypeCharToNativeSize(char ch, int is_complex) {
     }
   }
 }
+{{else}}{{endif}}
 
 typedef struct { char c; short x; } __Pyx_st_short;
 typedef struct { char c; int x; } __Pyx_st_int;
@@ -317,6 +329,7 @@ typedef struct { char c; void *x; } __Pyx_st_void_p;
 typedef struct { char c; PY_LONG_LONG x; } __Pyx_st_longlong;
 #endif
 
+{{if cyshared is False}}
 static size_t __Pyx_BufFmt_TypeCharToAlignment(char ch, int is_complex) {
   CYTHON_UNUSED_VAR(is_complex);
   switch (ch) {
@@ -336,6 +349,7 @@ static size_t __Pyx_BufFmt_TypeCharToAlignment(char ch, int is_complex) {
       return 0;
     }
 }
+{{else}}{{endif}}
 
 /* These are for computing the padding at the end of the struct to align
    on the first member of the struct. This will probably the same as above,
@@ -352,6 +366,7 @@ typedef struct { void *x; char c; } __Pyx_pad_void_p;
 typedef struct { PY_LONG_LONG x; char c; } __Pyx_pad_longlong;
 #endif
 
+{{if cyshared is False}}
 static size_t __Pyx_BufFmt_TypeCharToPadding(char ch, int is_complex) {
   CYTHON_UNUSED_VAR(is_complex);
   switch (ch) {
@@ -751,14 +766,18 @@ static const char* __Pyx_BufFmt_CheckString(__Pyx_BufFmt_Context* ctx, const cha
     }
   }
 }
+{{else}}{{endif}}
 
 /////////////// TypeInfoCompare.proto ///////////////
+{{if cyshared is False}}
 static int __pyx_typeinfo_cmp(__Pyx_TypeInfo *a, __Pyx_TypeInfo *b);
+{{else}}{{endif}}
 
 /////////////// TypeInfoCompare ///////////////
 //@requires: BufferFormatStructs
 
 // See if two dtypes are equal
+{{if cyshared is False}}
 static int
 __pyx_typeinfo_cmp(__Pyx_TypeInfo *a, __Pyx_TypeInfo *b)
 {
@@ -815,6 +834,7 @@ __pyx_typeinfo_cmp(__Pyx_TypeInfo *a, __Pyx_TypeInfo *b)
 
     return 1;
 }
+{{else}}{{endif}}
 
 
 /////////////// TypeInfoToFormat.proto ///////////////

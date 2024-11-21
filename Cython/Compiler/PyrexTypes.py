@@ -967,11 +967,12 @@ class MemoryViewSliceType(PyrexType):
         return cname + '.memview'
 
     def create_from_py_utility_code(self, env):
-        from . import MemoryView, Buffer
+        from . import MemoryView, Buffer, Options
 
         # We don't have 'code', so use a LazyUtilityCode with a callback.
         def lazy_utility_callback(code):
             context['dtype_typeinfo'] = Buffer.get_type_information_cname(code, self.dtype)
+            context['cyshared'] = Options.cyshared
             return TempitaUtilityCode.load(
                 "ObjectToMemviewSlice", "MemoryView_C.c", context=context)
 

@@ -246,6 +246,7 @@ def create_dummy_pipeline(context, scope, options, result):
     def parse_dummy_stage_factory(context):
         def parse(compsrc):
             from .Code import TempitaUtilityCode
+            from . import MemoryView
             source_desc = compsrc.source_desc
             full_module_name = compsrc.full_module_name
 
@@ -255,11 +256,28 @@ def create_dummy_pipeline(context, scope, options, result):
             tree.compilation_source = compsrc
             tree.scope = scope
 
+            scope.use_utility_code(MemoryView.memviewslice_init_code)
+
             ############## INJECTING PXD shared definitions #################
             s = context.find_module('cyshared')
             scope.cfunc_entries = s.cfunc_entries
             scope.cfunc_entries[1].utility_code = TempitaUtilityCode.load_cached("object_ord", "Builtins.c", context={'cyshared': False})
             scope.cfunc_entries[2].utility_code = TempitaUtilityCode.load("py_abs", "Builtins.c", context={'cyshared': False})
+            scope.cfunc_entries[3].utility_code = TempitaUtilityCode.load_cached("ObjectGetItem", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            # ObjectGetItem requires GetItemInt
+            scope.cfunc_entries[4].utility_code = TempitaUtilityCode.load_cached("ObjectGetItem", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[5].utility_code = TempitaUtilityCode.load_cached("GetItemInt", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[6].utility_code = TempitaUtilityCode.load_cached("DictGetItem", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[7].utility_code = TempitaUtilityCode.load_cached("Py3ClassCreate", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            # scope.cfunc_entries[8].utility_code = TempitaUtilityCode.load_cached("Py3ClassCreate", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[9].utility_code = TempitaUtilityCode.load_cached("CalculateMetaclass", "ObjectHandling.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[10].utility_code = TempitaUtilityCode.load_cached("MemviewSliceValidateAndInit", "MemoryView_C.c", context={'cyshared': Options.cyshared})
+            # scope.cfunc_entries[11].utility_code = TempitaUtilityCode.load_cached("MemviewSliceValidateAndInit", "MemoryView_C.c", context={'cyshared': Options.cyshared})
+            # scope.cfunc_entries[12].utility_code = TempitaUtilityCode.load_cached("MemviewSliceValidateAndInit", "MemoryView_C.c", context={'cyshared': Options.cyshared})
+            # scope.cfunc_entries[13].utility_code = TempitaUtilityCode.load_cached("MemviewSliceValidateAndInit", "MemoryView_C.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[14].utility_code = TempitaUtilityCode.load_cached("TypeInfoCompare", "Buffer.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[15].utility_code = TempitaUtilityCode.load_cached("BufferFormatCheck", "Buffer.c", context={'cyshared': Options.cyshared})
+            scope.cfunc_entries[18].utility_code = TempitaUtilityCode.load_cached("BufferGetAndValidate", "Buffer.c", context={'cyshared': Options.cyshared, 'max_dims': Options.buffer_max_dims})
             for e in scope.cfunc_entries:
                 e.cname = e.name # Aviods mangling C name
                 e.used = 1       # Forces generating prototype of function

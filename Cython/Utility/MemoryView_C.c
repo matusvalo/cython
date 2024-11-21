@@ -172,11 +172,13 @@ static CYTHON_INLINE {{memviewslice_name}} {{funcname}}(PyObject *, int writable
 #define __Pyx_IS_C_CONTIG 1
 #define __Pyx_IS_F_CONTIG 2
 
+{{if cyshared is False}}
 static int __Pyx_init_memviewslice(
                 struct __pyx_memoryview_obj *memview,
                 int ndim,
                 __Pyx_memviewslice *memviewslice,
                 int memview_is_new_reference);
+{{else}}{{endif}}
 
 static CYTHON_INLINE int __pyx_add_acquisition_count_locked(
     __pyx_atomic_int_type *acquisition_count, PyThread_type_lock lock);
@@ -229,6 +231,7 @@ __pyx_fail:
 
 /////////////// MemviewSliceValidateAndInit.proto ///////////////
 
+{{if cyshared is False}}
 static int __Pyx_ValidateAndInit_memviewslice(
                 int *axes_specs,
                 int c_or_f_flag,
@@ -238,12 +241,14 @@ static int __Pyx_ValidateAndInit_memviewslice(
                 __Pyx_BufFmt_StackElem stack[],
                 __Pyx_memviewslice *memviewslice,
                 PyObject *original_obj);
+{{else}}{{endif}}
 
 /////////////// MemviewSliceValidateAndInit ///////////////
 //@requires: Buffer.c::TypeInfoCompare
 //@requires: Buffer.c::BufferFormatStructs
 //@requires: Buffer.c::BufferFormatCheck
 
+{{if cyshared is False}}
 static int
 __pyx_check_strides(Py_buffer *buf, int dim, int ndim, int spec)
 {
@@ -300,7 +305,9 @@ __pyx_check_strides(Py_buffer *buf, int dim, int ndim, int spec)
 fail:
     return 0;
 }
+{{else}}{{endif}}
 
+{{if cyshared is False}}
 static int
 __pyx_check_suboffsets(Py_buffer *buf, int dim, int ndim, int spec)
 {
@@ -329,7 +336,9 @@ __pyx_check_suboffsets(Py_buffer *buf, int dim, int ndim, int spec)
 fail:
     return 0;
 }
+{{else}}{{endif}}
 
+{{if cyshared is False}}
 static int
 __pyx_verify_contig(Py_buffer *buf, int ndim, int c_or_f_flag)
 {
@@ -361,7 +370,9 @@ __pyx_verify_contig(Py_buffer *buf, int ndim, int c_or_f_flag)
 fail:
     return 0;
 }
+{{else}}{{endif}}
 
+{{if cyshared is False}}
 static int __Pyx_ValidateAndInit_memviewslice(
                 int *axes_specs,
                 int c_or_f_flag,
@@ -453,10 +464,12 @@ no_fail:
     __Pyx_RefNannyFinishContext();
     return retval;
 }
+{{else}}{{endif}}
 
 
 ////////// MemviewSliceInit //////////
 
+{{if cyshared is False}}
 static int
 __Pyx_init_memviewslice(struct __pyx_memoryview_obj *memview,
                         int ndim,
@@ -513,6 +526,7 @@ no_fail:
     __Pyx_RefNannyFinishContext();
     return retval;
 }
+{{else}}{{endif}}
 
 #ifndef Py_NO_RETURN
 // available since Py3.3
@@ -619,15 +633,18 @@ static CYTHON_INLINE void __Pyx_XCLEAR_MEMVIEW({{memviewslice_name}} *memslice,
 
 ////////// MemviewSliceCopyTemplate.proto //////////
 
+{{if cyshared is False}}
 static {{memviewslice_name}}
 __pyx_memoryview_copy_new_contig(const __Pyx_memviewslice *from_mvs,
                                  const char *mode, int ndim,
                                  size_t sizeof_dtype, int contig_flag,
                                  int dtype_is_object);
+{{else}}{{endif}}
 
 
 ////////// MemviewSliceCopyTemplate //////////
 
+{{if cyshared is False}}
 static {{memviewslice_name}}
 __pyx_memoryview_copy_new_contig(const __Pyx_memviewslice *from_mvs,
                                  const char *mode, int ndim,
@@ -711,6 +728,7 @@ no_fail:
     __Pyx_RefNannyFinishContext();
     return new_mvs;
 }
+{{else}}{{endif}}
 
 
 ////////// CopyContentsUtility.proto /////////
@@ -723,9 +741,11 @@ no_fail:
 
 ////////// OverlappingSlices.proto //////////
 
+{{if cyshared is False}}
 static int __pyx_slices_overlap({{memviewslice_name}} *slice1,
                                 {{memviewslice_name}} *slice2,
                                 int ndim, size_t itemsize);
+{{else}}{{endif}}
 
 
 ////////// OverlappingSlices //////////
@@ -733,6 +753,7 @@ static int __pyx_slices_overlap({{memviewslice_name}} *slice1,
 /* Based on numpy's core/src/multiarray/array_assign.c */
 
 /* Gets a half-open range [start, end) which contains the array data */
+{{if cyshared is False}}
 static void
 __pyx_get_array_memory_extents({{memviewslice_name}} *slice,
                                void **out_start, void **out_end,
@@ -776,6 +797,7 @@ __pyx_slices_overlap({{memviewslice_name}} *slice1,
 
     return (start1 < end2) && (start2 < end1);
 }
+{{else}}{{endif}}
 
 
 ////////// MemviewSliceCheckContig.proto //////////
@@ -786,11 +808,14 @@ __pyx_slices_overlap({{memviewslice_name}} *slice1,
 
 ////////// MemviewSliceIsContig.proto //////////
 
+{{if cyshared is False}}
 static int __pyx_memviewslice_is_contig(const {{memviewslice_name}} mvs, char order, int ndim);/*proto*/
+{{else}}{{endif}}
 
 
 ////////// MemviewSliceIsContig //////////
 
+{{if cyshared is False}}
 static int
 __pyx_memviewslice_is_contig(const {{memviewslice_name}} mvs, char order, int ndim)
 {
@@ -815,6 +840,7 @@ __pyx_memviewslice_is_contig(const {{memviewslice_name}} mvs, char order, int nd
 
     return 1;
 }
+{{else}}{{endif}}
 
 
 /////////////// MemviewSliceIndex ///////////////

@@ -44,6 +44,7 @@ from .Builtin import (
     slice_type, sequence_types as builtin_sequence_types, memoryview_type,
 )
 from . import Builtin
+from . import Options
 from . import Symtab
 from .. import Utils
 from .Annotate import AnnotationItem
@@ -4583,20 +4584,20 @@ class IndexNode(_IndexingBaseNode):
                     function = "__Pyx_GetItemInt_Tuple"
                 else:
                     function = "__Pyx_GetItemInt"
-                utility_code = TempitaUtilityCode.load_cached("GetItemInt", "ObjectHandling.c")
+                utility_code = TempitaUtilityCode.load_cached("GetItemInt", "ObjectHandling.c", context={'cyshared': Options.cyshared})
             else:
                 if base_type is dict_type:
                     function = "__Pyx_PyDict_GetItem"
-                    utility_code = UtilityCode.load_cached("DictGetItem", "ObjectHandling.c")
+                    utility_code = TempitaUtilityCode.load_cached("DictGetItem", "ObjectHandling.c", context={'cyshared': Options.cyshared})
                 elif base_type is py_object_type and self.index.type is unicode_type:
                     # obj[str] is probably doing a dict lookup
                     function = "__Pyx_PyObject_Dict_GetItem"
-                    utility_code = UtilityCode.load_cached("DictGetItem", "ObjectHandling.c")
+                    utility_code = TempitaUtilityCode.load_cached("DictGetItem", "ObjectHandling.c", context={'cyshared': Options.cyshared})
                 else:
                     function = "__Pyx_PyObject_GetItem"
                     code.globalstate.use_utility_code(
-                        TempitaUtilityCode.load_cached("GetItemInt", "ObjectHandling.c"))
-                    utility_code = UtilityCode.load_cached("ObjectGetItem", "ObjectHandling.c")
+                        TempitaUtilityCode.load_cached("GetItemInt", "ObjectHandling.c", context={'cyshared': Options.cyshared}))
+                    utility_code = TempitaUtilityCode.load_cached("ObjectGetItem", "ObjectHandling.c", context={'cyshared': Options.cyshared})
         elif self.type.is_unicode_char and base_type is unicode_type:
             assert self.index.type.is_int
             function = "__Pyx_GetItemInt_Unicode"
@@ -9797,7 +9798,7 @@ class Py3ClassNode(ExprNode):
             self.class_def_node.body.stats.insert(0, node)
 
     def generate_result_code(self, code):
-        code.globalstate.use_utility_code(UtilityCode.load_cached("Py3ClassCreate", "ObjectHandling.c"))
+        code.globalstate.use_utility_code(TempitaUtilityCode.load_cached("Py3ClassCreate", "ObjectHandling.c", context={'cyshared': Options.cyshared}))
         cname = code.intern_identifier(self.name)
         class_def_node = self.class_def_node
         mkw = class_def_node.mkw.py_result() if class_def_node.mkw else 'NULL'
@@ -9847,7 +9848,7 @@ class PyClassMetaclassNode(ExprNode):
                 mkw.result())
         else:
             code.globalstate.use_utility_code(
-                UtilityCode.load_cached("CalculateMetaclass", "ObjectHandling.c"))
+                TempitaUtilityCode.load_cached("CalculateMetaclass", "ObjectHandling.c", context={'cyshared': Options.cyshared}))
             call = "__Pyx_CalculateMetaclass(NULL, %s)" % (
                 bases.result())
         code.putln(

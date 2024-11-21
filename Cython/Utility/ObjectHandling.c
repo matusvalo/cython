@@ -349,6 +349,7 @@ static CYTHON_INLINE PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject *k
 //@requires: PyObjectCallOneArg
 
 #if CYTHON_USE_TYPE_SLOTS
+{{if cyshared is False}}
 static PyObject *__Pyx_PyObject_GetIndex(PyObject *obj, PyObject *index) {
     // Get element from sequence object `obj` at index `index`.
     PyObject *runerr = NULL;
@@ -389,6 +390,7 @@ static PyObject *__Pyx_PyObject_GetItem_Slow(PyObject *obj, PyObject *key) {
     __Pyx_DECREF_TypeName(obj_type_name);
     return NULL;
 }
+{{else}}{{endif}}
 
 static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject *key) {
     PyTypeObject *tp = Py_TYPE(obj);
@@ -409,7 +411,9 @@ static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject *key) {
 /////////////// DictGetItem.proto ///////////////
 
 #if !CYTHON_COMPILING_IN_PYPY
+{{if cyshared is False}}
 static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key);/*proto*/
+{{else}}{{endif}}
 
 #define __Pyx_PyObject_Dict_GetItem(obj, name) \
     (likely(PyDict_CheckExact(obj)) ? \
@@ -423,6 +427,7 @@ static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key);/*proto*/
 /////////////// DictGetItem ///////////////
 
 #if !CYTHON_COMPILING_IN_PYPY
+{{if cyshared is False}}
 static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
     PyObject *value;
     value = PyDict_GetItemWithError(d, key);
@@ -445,6 +450,7 @@ static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
     Py_INCREF(value);
     return value;
 }
+{{else}}{{endif}}
 #endif
 
 /////////////// GetItemInt.proto ///////////////
@@ -466,13 +472,16 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_{{type}}_Fast(PyObject *o, Py_ss
                                                               int wraparound, int boundscheck);
 {{endfor}}
 
+{{if cyshared is False}}
 static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
+{{else}}{{endif}}
 static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
                                                      int is_list, int wraparound, int boundscheck);
 
 /////////////// GetItemInt ///////////////
 //@substitute: tempita
 
+{{if cyshared is False}}
 static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
     PyObject *r;
     if (unlikely(!j)) return NULL;
@@ -480,6 +489,7 @@ static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
     Py_DECREF(j);
     return r;
 }
+{{else}}{{endif}}
 
 {{for type in ['List', 'Tuple']}}
 static CYTHON_INLINE PyObject *__Pyx_GetItemInt_{{type}}_Fast(PyObject *o, Py_ssize_t i,
@@ -915,10 +925,14 @@ static CYTHON_INLINE PyObject* __Pyx_Py{{type}}_GetSlice(
 
 /////////////// CalculateMetaclass.proto ///////////////
 
+{{if cyshared is False}}
 static PyObject *__Pyx_CalculateMetaclass(PyTypeObject *metaclass, PyObject *bases);
+{{else}}{{endif}}
+
 
 /////////////// CalculateMetaclass ///////////////
 
+{{if cyshared is False}}
 static PyObject *__Pyx_CalculateMetaclass(PyTypeObject *metaclass, PyObject *bases) {
     Py_ssize_t i, nbases;
 #if CYTHON_ASSUME_SAFE_SIZE
@@ -961,6 +975,7 @@ static PyObject *__Pyx_CalculateMetaclass(PyTypeObject *metaclass, PyObject *bas
     Py_INCREF((PyObject*) metaclass);
     return (PyObject*) metaclass;
 }
+{{else}}{{endif}}
 
 
 /////////////// FindInheritedMetaclass.proto ///////////////
@@ -1190,10 +1205,12 @@ error:
 
 /////////////// Py3ClassCreate.proto ///////////////
 
+{{if cyshared is False}}
 static PyObject *__Pyx_Py3MetaclassPrepare(PyObject *metaclass, PyObject *bases, PyObject *name, PyObject *qualname,
                                            PyObject *mkw, PyObject *modname, PyObject *doc); /*proto*/
 static PyObject *__Pyx_Py3ClassCreate(PyObject *metaclass, PyObject *name, PyObject *bases, PyObject *dict,
                                       PyObject *mkw, int calculate_metaclass, int allow_py2_metaclass); /*proto*/
+{{else}}{{endif}}
 
 /////////////// Py3ClassCreate ///////////////
 //@requires: PyObjectGetAttrStrNoError
@@ -1203,6 +1220,7 @@ static PyObject *__Pyx_Py3ClassCreate(PyObject *metaclass, PyObject *name, PyObj
 //@requires: PyObjectLookupSpecial
 // only in fallback code:
 
+{{if cyshared is False}}
 static PyObject *__Pyx_Py3MetaclassPrepare(PyObject *metaclass, PyObject *bases, PyObject *name,
                                            PyObject *qualname, PyObject *mkw, PyObject *modname, PyObject *doc) {
     PyObject *ns;
@@ -1262,6 +1280,7 @@ static PyObject *__Pyx_Py3ClassCreate(PyObject *metaclass, PyObject *name, PyObj
     Py_XDECREF(owned_metaclass);
     return result;
 }
+{{else}}{{endif}}
 
 /////////////// ExtTypeTest.proto ///////////////
 

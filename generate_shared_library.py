@@ -14,7 +14,7 @@ options = Options.CompilationOptions()
 context = Main.Context.from_options(options)
 scope = Symtab.ModuleScope('cyshared', parent_module = None, context = context, is_package=False)
 
-source = StringSourceDescriptor("cyshared", "")
+source = StringSourceDescriptor("cyshared", '')
 source.filename = 'cyshared.pyx'
 # source = FileSourceDescriptor('cyshared.pxd')
 comp_src = Main.CompilationSource(source, EncodedString('cyshared'), '.')

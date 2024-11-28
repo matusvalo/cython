@@ -246,6 +246,7 @@ def create_dummy_pipeline(context, scope, options, result):
     def parse_dummy_stage_factory(context):
         def parse(compsrc):
             from .Code import TempitaUtilityCode
+            from .UtilityCode import CythonUtilityCode
             from . import MemoryView
             source_desc = compsrc.source_desc
             full_module_name = compsrc.full_module_name
@@ -257,6 +258,7 @@ def create_dummy_pipeline(context, scope, options, result):
             tree.scope = scope
 
             scope.use_utility_code(MemoryView.memviewslice_init_code)
+            scope.use_utility_code(MemoryView.typeinfo_to_format_code)
 
             ############## INJECTING PXD shared definitions #################
             s = context.find_module('cyshared')
@@ -282,6 +284,19 @@ def create_dummy_pipeline(context, scope, options, result):
                 e.cname = e.name # Aviods mangling C name
                 e.used = 1       # Forces generating prototype of function
             ############## INJECTING PXD shared definitions #################
+
+            # code = CythonUtilityCode.load("View.MemoryView", "MemoryView.pyx", context={'memviewslice_name': '__Pyx_memviewslice', 'max_dims': Options.buffer_max_dims, 'THREAD_LOCKS_PREALLOCATED': 8}, from_scope = scope)
+            # tt = code.get_tree(cython_scope=scope) #entries_only=True, cython_scope=scope)
+            # return tt
+            # entries_to_extend = []
+            # for e in tt.scope.cfunc_entries:
+            #     if e in s.cfunc_entries: # and e not in scope.cfunc_entries:
+            # #         # breakpoint()
+            # #         print(e)
+            #         e.defined_in_pxd = True
+            #         entries_to_extend.append(e)
+            # scope.cfunc_entries.extend(entries_to_extend)
+            # breakpoint()
             return tree
         return parse
 

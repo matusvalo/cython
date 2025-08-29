@@ -93,6 +93,18 @@ __pyx_fail:
 }
 
 
+/////////////// MemviewSliceValidateAndInit.export ///////////////
+
+static int __Pyx_ValidateAndInit_memviewslice(
+                int *axes_specs,
+                int c_or_f_flag,
+                int buf_flags,
+                int ndim,
+                const __Pyx_TypeInfo *dtype,
+                __Pyx_BufFmt_StackElem stack[],
+                __Pyx_memviewslice *memviewslice,
+                PyObject *original_obj);
+
 /////////////// MemviewSliceValidateAndInit.proto ///////////////
 
 static int __Pyx_ValidateAndInit_memviewslice(

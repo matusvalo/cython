@@ -1216,13 +1216,12 @@ error:
     return NULL;
 }
 
-/////////////// Py3ClassCreate.export ///////////////
+/////////////// Py3ClassCreate.proto ///////////////
 
 static PyObject *__Pyx_Py3MetaclassPrepare(PyObject *metaclass, PyObject *bases, PyObject *name, PyObject *qualname,
-                                           PyObject *mkw, PyObject *modname, PyObject *doc);
-
+                                           PyObject *mkw, PyObject *modname, PyObject *doc); /*proto*/
 static PyObject *__Pyx_Py3ClassCreate(PyObject *metaclass, PyObject *name, PyObject *bases, PyObject *dict,
-                                      PyObject *mkw, int calculate_metaclass, int allow_py2_metaclass);
+                                      PyObject *mkw, int calculate_metaclass, int allow_py2_metaclass); /*proto*/
 
 /////////////// Py3ClassCreate ///////////////
 //@requires: PyObjectGetAttrStrNoError

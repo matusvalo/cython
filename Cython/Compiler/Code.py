@@ -1397,7 +1397,7 @@ class StringConst:
         self.py_strings = None
         self.c_used = False
 
-    def get_py_string_const(self, encoding, identifier=None):
+    def get_py_string_const(self, encoding, identifier=None) -> "PyStringConst":
         text = self.text
         intern: cython.bint
         is_unicode: cython.bint
@@ -1755,12 +1755,13 @@ class GlobalState:
         # aren't just Python objects
         return c
 
-    def get_string_const(self, text, c_used=True):
+    def get_string_const(self, text, c_used=True) -> StringConst:
         # return a C string constant, creating a new one if necessary
         if text.is_unicode:
             byte_string = text.utf8encode()
         else:
             byte_string = text.byteencode()
+        c: StringConst
         try:
             c = self.string_const_index[byte_string]
         except KeyError:
@@ -1778,7 +1779,7 @@ class GlobalState:
             c = self.pyunicode_ptr_const_index[text] = self.new_const_cname()
         return c
 
-    def get_py_string_const(self, text, identifier=None):
+    def get_py_string_const(self, text, identifier=None) -> "PyStringConst":
         # return a Python string constant, creating a new one if necessary
         c_string: StringConst = self.get_string_const(text, c_used=False)
         py_string = c_string.get_py_string_const(text.encoding, identifier)
@@ -1793,13 +1794,13 @@ class GlobalState:
     def get_interned_identifier(self, text):
         return self.get_py_string_const(text, identifier=True)
 
-    def new_string_const(self, text, byte_string):
+    def new_string_const(self, text, byte_string) -> StringConst:
         cname = self.new_string_const_cname(byte_string)
         c = StringConst(cname, text, byte_string)
         self.string_const_index[byte_string] = c
         return c
 
-    def new_num_const(self, value, py_type, value_code=None):
+    def new_num_const(self, value, py_type, value_code=None) -> NumConst:
         cname = self.new_num_const_cname(value, py_type)
         c = NumConst(cname, value, py_type, value_code)
         self.num_const_index[(value, py_type)] = c
@@ -1990,10 +1991,12 @@ class GlobalState:
         py_unicode_consts = []
 
         # Split into buckets.
+        c: StringConst
         for _, _, c in sorted([(len(c.cname), c.cname, c) for c in self.string_const_index.values()]):
             if c.c_used:
                 c_consts.append((len(c.cname), c.cname, c.escaped_value))
             if c.py_strings:
+                py_string: PyStringConst
                 for py_string in c.py_strings.values():
                     text = c.text
                     if py_string.is_unicode and not isinstance(text, str):
@@ -2019,8 +2022,8 @@ class GlobalState:
             )
 
         # Generate legacy Py_UNICODE[] constants.
-        for c, cname in sorted(self.pyunicode_ptr_const_index.items()):
-            utf16_array, utf32_array = StringEncoding.encode_pyunicode_string(c)
+        for c_obj, cname in sorted(self.pyunicode_ptr_const_index.items()):
+            utf16_array, utf32_array = StringEncoding.encode_pyunicode_string(c_obj)
             if utf16_array:
                 # Narrow and wide representations differ
                 decls_writer.putln("#ifdef Py_UNICODE_WIDE")

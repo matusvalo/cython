@@ -16,8 +16,8 @@ cdef class UtilityCode(UtilityCodeBase):
     cdef public object export
     cdef public object impl
     cdef public object init
-    cdef public object cleanup
-    cdef object proto_block
+    cdef readonly object cleanup
+    cdef readonly object proto_block
     cdef readonly object module_state_decls
     cdef readonly object module_state_traverse
     cdef readonly object module_state_clear
@@ -90,9 +90,9 @@ cdef class PyObjectConst:
 cdef class StringConst:
     cdef readonly object cname
     cdef readonly object text
-    cdef readonly object escaped_value
-    cdef readonly dict py_strings
-    cdef public bint c_used
+    cdef object escaped_value
+    cdef dict py_strings
+    cdef bint c_used
 
     cpdef get_py_string_const(self, encoding, identifier=*)
 
@@ -101,8 +101,8 @@ cdef class StringConst:
 cdef class PyStringConst:
     cdef readonly object cname
     cdef readonly object encoding
-    cdef readonly bint is_unicode
-    cdef readonly bint intern
+    cdef bint is_unicode
+    cdef bint intern
 
 
 #class GlobalState(object):

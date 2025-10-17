@@ -1770,7 +1770,7 @@ class GlobalState:
             c.c_used = True
         return c
 
-    def get_pyunicode_ptr_const(self, text):
+    def get_pyunicode_ptr_const(self, text) -> str:
         # return a Py_UNICODE[] constant, creating a new one if necessary
         assert text.is_unicode
         try:
@@ -1835,7 +1835,7 @@ class GlobalState:
             cname = "%s%s" % (prefix, value)
         return cname
 
-    def new_const_cname(self, prefix='', value=''):
+    def new_const_cname(self, prefix='', value='') -> str:
         value = replace_identifier('_', value)[:32].strip('_')
         name_suffix = self.unique_const_cname(value + "{sep}{counter}")
         if prefix:
@@ -1844,12 +1844,12 @@ class GlobalState:
             prefix = Naming.const_prefix
         return "%s%s" % (prefix, name_suffix)
 
-    def new_array_const_cname(self, prefix: str):
+    def new_array_const_cname(self, prefix: str) -> str:
         count = self.const_array_counters.get(prefix, 0)
         self.const_array_counters[prefix] = count+1
         return f"{Naming.pyrex_prefix}{prefix}[{count}]"
 
-    def get_cached_unbound_method(self, type_cname, method_name):
+    def get_cached_unbound_method(self, type_cname, method_name) -> str:
         key = (type_cname, method_name)
         try:
             cname = self.cached_cmethods[key]
@@ -2580,14 +2580,14 @@ class CCodeWriter:
     def getvalue(self):
         return self.buffer.getvalue()
 
-    def write(self, s):
+    def write(self, s: str):
         if '\n' in s:
             self._write_lines(s)
         else:
             self._write_to_buffer(s)
 
     @cython.final
-    def _write_lines(self, s):
+    def _write_lines(self, s: str):
         # Cygdb needs to know which Cython source line corresponds to which C line.
         # Therefore, we write this information into "self.buffer.markers" and then write it from there
         # into cython_debug/cython_debug_info_* (see ModuleNode._serialize_lineno_map).
@@ -2596,7 +2596,7 @@ class CCodeWriter:
 
         self._write_to_buffer(s)
 
-    def _write_to_buffer(self, s):
+    def _write_to_buffer(self, s: str):
         self.buffer.write(s)
 
     def insertion_point(self):
@@ -2790,7 +2790,7 @@ class CCodeWriter:
 
     # code generation
 
-    def putln(self, code="", safe=False):
+    def putln(self, code: str = "", safe=False):
         if self.last_pos and self.bol:
             self.emit_marker()
         if self.code_config.emit_linenums and self.last_marked_pos:
@@ -2831,7 +2831,7 @@ class CCodeWriter:
                 f'__Pyx_TraceLine({pos[1]:d},{self.pos_to_offset(pos):d},{not self.funcstate.gil_owned:d},{self.error_goto(pos)})\n')
 
     @cython.final
-    def _build_marker(self, pos):
+    def _build_marker(self, pos) -> str:
         source_desc, line, col = pos
         assert isinstance(source_desc, SourceDescriptor)
         contents = self.globalstate.commented_file_contents(source_desc)
@@ -2841,7 +2841,7 @@ class CCodeWriter:
         code = "\n".join(lines)
         return f'/* "{source_desc.get_escaped_description()}":{line:d}\n{code}\n*/\n'
 
-    def put_safe(self, code):
+    def put_safe(self, code: str):
         # put code, but ignore {}
         self.write(code)
         self.bol = 0
@@ -2876,14 +2876,14 @@ class CCodeWriter:
         self.put_multilines(code)
 
     @cython.final
-    def put_multilines(self, code):
+    def put_multilines(self, code: str):
         # We assume that the code is consistently indented and just needs overall indenting.
         # We also don't need to indent the first line since "self.put()" will do it for us.
         if self.level and '\n' in code:
             code = ("  " * self.level).join(code.splitlines(keepends=True))
         self.put(code)
 
-    def put(self, code):
+    def put(self, code: str):
         fix_indent = False
         dl: cython.Py_ssize_t = code.count("{") if "{" in code else 0
         if "}" in code:
@@ -3010,7 +3010,7 @@ class CCodeWriter:
         else:
             return cond
 
-    def build_function_modifiers(self, modifiers, mapper=modifier_output_mapper):
+    def build_function_modifiers(self, modifiers, mapper=modifier_output_mapper) -> str:
         if not modifiers:
             return ''
         return '%s ' % ' '.join([mapper(m,m) for m in modifiers])

@@ -121,15 +121,15 @@ cdef class CCodeWriter(object):
     cdef public Py_ssize_t call_level  # debug-only, see Nodes.py
     cdef bint bol
 
-    cpdef write(self, s)
-    cdef _write_lines(self, s)
-    cpdef _write_to_buffer(self, s)
-    cdef put_multilines(self, code)
-    cpdef put(self, code)
-    cpdef put_safe(self, code)
-    cpdef putln(self, code=*, bint safe=*)
+    cpdef write(self, str s)
+    cdef _write_lines(self, str s)
+    cpdef _write_to_buffer(self, str s)
+    cdef put_multilines(self, str code)
+    cpdef put(self, str code)
+    cpdef put_safe(self, str code)
+    cpdef putln(self, str code=*, bint safe=*)
     cdef emit_marker(self)
-    cdef _build_marker(self, tuple pos)
+    cdef str _build_marker(self, tuple pos)
     cdef increase_indent(self)
     cdef decrease_indent(self)
     cdef indent(self)

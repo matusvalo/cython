@@ -1151,7 +1151,7 @@ class FunctionState:
 
     # labels
 
-    def new_label(self, name=None):
+    def new_label(self, name: str = None) -> str:
         n: cython.size_t = self.label_counter
         self.label_counter = n + 1
         label = "%s%d" % (Naming.label_prefix, n)
@@ -1165,7 +1165,7 @@ class FunctionState:
         self.yield_labels.append(num_and_label)
         return num_and_label
 
-    def new_error_label(self, prefix=""):
+    def new_error_label(self, prefix: str = ""):
         old_err_lbl = self.error_label
         self.error_label = self.new_label(prefix + 'error')
         return old_err_lbl
@@ -1179,7 +1179,7 @@ class FunctionState:
         (self.continue_label,
          self.break_label) = labels
 
-    def new_loop_labels(self, prefix=""):
+    def new_loop_labels(self, prefix: str = ""):
         old_labels = self.get_loop_labels()
         self.set_loop_labels(
             (self.new_label(prefix + "continue"),
@@ -1811,7 +1811,7 @@ class GlobalState:
         value = bytes_value.decode('ASCII', 'ignore')
         return self.new_const_cname(value=value)
 
-    def unique_const_cname(self, format_str):  # type: (str) -> str
+    def unique_const_cname(self, format_str: str) -> str:
         used = self.const_cnames_used
         cname = value = format_str.format(sep='', counter='')
         while cname in used:
@@ -1820,7 +1820,7 @@ class GlobalState:
         used[cname] = 1
         return cname
 
-    def new_num_const_cname(self, value, py_type):  # type: (str, str) -> str
+    def new_num_const_cname(self, value: str, py_type: str) -> str:
         if py_type == 'long':
             value += 'L'
             py_type = 'int'
@@ -1835,7 +1835,7 @@ class GlobalState:
             cname = "%s%s" % (prefix, value)
         return cname
 
-    def new_const_cname(self, prefix='', value='') -> str:
+    def new_const_cname(self, prefix: str = '', value: str = '') -> str:
         value = replace_identifier('_', value)[:32].strip('_')
         name_suffix = self.unique_const_cname(value + "{sep}{counter}")
         if prefix:
@@ -1858,7 +1858,7 @@ class GlobalState:
                 'umethod', '%s_%s' % (type_cname, method_name))
         return cname
 
-    def cached_unbound_method_call_code(self, modulestate_cname, obj_cname, type_cname, method_name, arg_cnames):
+    def cached_unbound_method_call_code(self, modulestate_cname, obj_cname, type_cname, method_name, arg_cnames) -> str:
         # admittedly, not the best place to put this method, but it is reused by UtilityCode and ExprNodes ...
         utility_code_name = "CallUnboundCMethod%d" % len(arg_cnames)
         self.use_utility_code(UtilityCode.load_cached(utility_code_name, "ObjectHandling.c"))

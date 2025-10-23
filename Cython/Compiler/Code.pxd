@@ -28,7 +28,7 @@ cdef class UtilityCode(UtilityCodeBase):
     cdef readonly tuple _parts_tuple
     cdef list shared_utility_functions
 
-    cpdef none_or_sub(self, s, context)
+    cpdef str none_or_sub(self, str s, context)
     # TODO - Signature not compatible with previous declaration
     #@cython.final
     #cdef bint _put_code_section(self, writer, code_type: str) except -1
@@ -69,7 +69,7 @@ cdef class FunctionState:
 
     cdef public bint needs_refnanny
 
-    cpdef new_label(self, name=*)
+    cpdef str new_label(self, str name=*)
     cpdef tuple get_loop_labels(self)
     cpdef set_loop_labels(self, labels)
     cpdef tuple get_all_labels(self)
@@ -94,7 +94,7 @@ cdef class StringConst:
     cdef dict py_strings
     cdef bint c_used
 
-    cpdef get_py_string_const(self, encoding, identifier=*)
+    cpdef PyStringConst get_py_string_const(self, encoding, identifier=*)
 
 
 @cython.final

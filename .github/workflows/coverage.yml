@@ -51,7 +51,7 @@ jobs:
       - name: Copy coverage HTML
         run: |
           if [ -d './coverage-report-html' ]; then
-            ESCAPED_HEAD=$(printf "%s" "$HEAD" | python Tools/escape_url.py)
+            ESCAPED_HEAD=$(python3 -c "import sys; from urllib.parse import quote; print(quote(sys.argv[1]))" "$HEAD")
             mkdir -p gh_pages_coverage/coverage/ \
               && cp -r './coverage-report-html' "gh_pages_coverage/coverage/$ESCAPED_HEAD";
           fi

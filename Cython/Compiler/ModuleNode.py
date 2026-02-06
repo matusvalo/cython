@@ -3283,6 +3283,9 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
         shared_utility_exporter.call_export_code(code)
 
         code.putln("/*--- Type init code ---*/")
+
+        shared_utility_exporter.call_import_code(code)
+
         self.generate_type_init_code(env, subfunction, code)
 
         with subfunction("Type import code") as inner_code:
@@ -3297,8 +3300,6 @@ class ModuleNode(Nodes.Node, Nodes.BlockNode):
             for module in imported_modules:
                 self.specialize_fused_types(module)
                 self.generate_c_function_import_code_for_module(module, env, inner_code)
-
-        shared_utility_exporter.call_import_code(code)
 
         code.putln("/*--- Execution code ---*/")
         code.mark_pos(None)

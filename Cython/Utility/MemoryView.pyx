@@ -788,7 +788,7 @@ cdef memoryview memview_slice(memoryview memview, object indices):
 #
 
 @cname('__pyx_memoryview_slice_memviewslice')
-cdef int slice_memviewslice(
+cdef inline int slice_memviewslice(
         {{memviewslice_name}} *dst,
         Py_ssize_t shape, Py_ssize_t stride, Py_ssize_t suboffset,
         int dim, int new_ndim, int *suboffset_dim,

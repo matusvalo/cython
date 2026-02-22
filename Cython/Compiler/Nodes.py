@@ -4927,11 +4927,11 @@ class GeneratorBodyDefNode(DefNode):
         # ----- prepare target container for inlined comprehension
         if self.is_inlined and self.inlined_comprehension_type is not None:
             target_type = self.inlined_comprehension_type
-            if target_type == Builtin.list_type:
+            if target_type.is_list_type:
                 comp_init = 'PyList_New(0)'
-            elif target_type is Builtin.set_type:
+            elif target_type.is_set_type:
                 comp_init = 'PySet_New(NULL)'
-            elif target_type == Builtin.dict_type:
+            elif target_type.is_dict_type:
                 comp_init = 'PyDict_New()'
             else:
                 raise InternalError(
@@ -6391,7 +6391,6 @@ class SingleAssignmentNode(AssignmentNode):
                 # cannot assign to C array, only to its full slice
                 lhs = ExprNodes.SliceIndexNode(self.lhs.pos, base=self.lhs, start=None, stop=None)
                 self.lhs = lhs.analyse_target_types(env)
-
         if self.lhs.type.is_cpp_class:
             op = env.lookup_operator_for_types(self.pos, '=', [self.lhs.type, self.rhs.type])
             if op:
@@ -6403,8 +6402,8 @@ class SingleAssignmentNode(AssignmentNode):
                     env.use_utility_code(UtilityCode.load_cached("CppExceptionConversion", "CppSupport.cpp"))
             else:
                 rhs = self.rhs.coerce_to(self.lhs.type, env)
-        elif (self.lhs.type in Builtin.typed_container_types and
-              self.rhs.type in Builtin.typed_container_types and
+        elif (self.lhs.type.is_typed_container_type and
+              self.rhs.type.is_typed_container_type and
               not self.lhs.type.assignable_from(self.rhs.type)):
             rhs = self.rhs
             rhs.fail_assignment(self.lhs.type)

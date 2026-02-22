@@ -279,6 +279,11 @@ class PyrexType(BaseType):
     is_numpy_buffer = 0
     is_unowned_view = False
     is_cython_lock_type = False
+    is_tuple_type = False
+    is_list_type = False
+    is_set_type = False
+    is_dict_type = False
+    is_typed_container_type = False
     has_attributes = 0
     needs_refcounting = False
     refcounting_needs_gil = True
@@ -4902,7 +4907,7 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         return self
 
     def assignable_from(self, src_type):
-        if self == src_type:
+        if self.get_container_type().name == src_type.get_container_type().name:
             if not self.subscripted_types and not src_type.subscripted_types:
                 return True
             if not self.subscripted_types and src_type.subscripted_types:
@@ -4919,8 +4924,7 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         return super().assignable_from(src_type)
 
     def infer_indexed_type(self):
-        from .Builtin import dict_type
-        if self.get_container_type() == dict_type:
+        if self.get_container_type().is_dict_type:
             return self.get_subscripted_type(1)
         else:
             return self.get_subscripted_type(0)
@@ -4928,7 +4932,7 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
     def infer_iterator_type(self):
         return self.get_subscripted_type(0)
 
-    def get_container_type(self):
+    def get_container_type(self) -> PyrexType:
         """Returns the basic container type of the (potentially subscripted) type,
         or None if not a container type.
 
@@ -4939,14 +4943,25 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
             return base_type.get_container_type()
         return self
 
-    def __eq__(self, other):
-        if isinstance(other, BuiltinTypeConstructorObjectType):
-            return self.get_container_type().name == other.get_container_type().name
-        return NotImplemented
+    @property
+    def is_tuple_type(self) -> bool:
+        return self.get_container_type().name == 'tuple'
 
-    def __hash__(self):
-        return hash((type(self), self.get_container_type().name))
+    @property
+    def is_list_type(self) -> bool:
+        return self.get_container_type().name == 'list'
 
+    @property
+    def is_set_type(self) -> bool:
+        return self.get_container_type().name == 'set'
+
+    @property
+    def is_dict_type(self) -> bool:
+        return self.get_container_type().name == 'dict'
+
+    @property
+    def is_typed_container_type(self) -> bool:
+        return self.get_container_type().name in self.types_supporting_subscripting
 
 class PythonTupleTypeConstructor(BuiltinTypeConstructorObjectType):
     def specialize_here(self, pos, env, template_values=None):

@@ -860,11 +860,6 @@ def init_builtins():
     bool_type  = builtin_scope.lookup('bool').type
     complex_type  = builtin_scope.lookup('complex').type
 
-    typed_container_types = tuple(
-        builtin_scope.lookup(type_name).type
-        for type_name in PyrexTypes.BuiltinTypeConstructorObjectType.types_supporting_subscripting
-    )
-
     sequence_types = (
         list_type,
         tuple_type,

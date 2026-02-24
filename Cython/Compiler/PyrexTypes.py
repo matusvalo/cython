@@ -266,6 +266,11 @@ class PyrexType(BaseType):
     is_error = 0
     is_buffer = 0
     is_ctuple = 0
+    is_tuple_type = False
+    is_list_type = False
+    is_dict_type = False
+    is_set_type = False
+    is_frozenset_type = False
     is_memoryviewslice = 0
     is_pythran_expr = 0
     is_numpy_buffer = 0
@@ -4852,6 +4857,27 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
     """
     builtin types like list, dict etc which can be subscripted in annotations
     """
+
+    @property
+    def is_list_type(self) -> bool:
+        return self.name == 'list'
+
+    @property
+    def is_dict_type(self) -> bool:
+        return self.name == 'dict'
+    
+    @property
+    def is_set_type(self) -> bool:
+        return self.name == 'set'
+    
+    @property
+    def is_tuple_type(self) -> bool:
+        return self.name == 'tuple'
+
+    @property
+    def is_frozenset_type(self) -> bool:
+        return self.name == 'frozenset'
+
     def __init__(self, name, cname, objstruct_cname=None):
         super().__init__(
             name, cname, objstruct_cname=objstruct_cname)

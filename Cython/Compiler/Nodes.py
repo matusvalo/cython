@@ -4927,11 +4927,11 @@ class GeneratorBodyDefNode(DefNode):
         # ----- prepare target container for inlined comprehension
         if self.is_inlined and self.inlined_comprehension_type is not None:
             target_type = self.inlined_comprehension_type
-            if target_type is Builtin.list_type:
+            if target_type.is_list_type:
                 comp_init = 'PyList_New(0)'
-            elif target_type is Builtin.set_type:
+            elif target_type.is_set_type:
                 comp_init = 'PySet_New(NULL)'
-            elif target_type is Builtin.dict_type:
+            elif target_type.is_dict_type:
                 comp_init = 'PyDict_New()'
             else:
                 raise InternalError(
@@ -7160,7 +7160,7 @@ class RaiseStatNode(StatNode):
         if self.exc_value:
             exc_value = self.exc_value.analyse_types(env)
             if self.wrap_tuple_value:
-                if exc_value.type is Builtin.tuple_type or not exc_value.type.is_builtin_type:
+                if exc_value.type.is_tuple_type or not exc_value.type.is_builtin_type:
                     # prevent tuple values from being interpreted as argument value tuples
                     from .ExprNodes import TupleNode
                     exc_value = TupleNode(exc_value.pos, args=[exc_value.coerce_to_pyobject(env)], slow=True)

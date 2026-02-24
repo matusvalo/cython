@@ -12,8 +12,7 @@ cython.declare(error=object, warning=object, warn_once=object, InternalError=obj
                unicode_type=object, bytes_type=object, type_type=object, int_type=object, float_type=object,
                Builtin=object, Symtab=object, Utils=object, find_coercion_error=object,
                debug_disposal_code=object, debug_temp_alloc=object, debug_coercion=object,
-               bytearray_type=object, slice_type=object, memoryview_type=object,
-               builtin_sequence_types=object, build_line_table=object,
+               bytearray_type=object, slice_type=object, memoryview_type=object, build_line_table=object,
                inspect=object, copy=object, os=object, re=object, sys=object,
                itertools=object, defaultdict=object,
 )
@@ -45,7 +44,7 @@ from . import TypeSlots
 from .Builtin import (
     list_type, tuple_type, set_type, dict_type, type_type,
     unicode_type, bytes_type, bytearray_type, int_type, float_type,
-    slice_type, sequence_types as builtin_sequence_types, memoryview_type,
+    slice_type, memoryview_type,
 )
 from . import Builtin
 from . import Symtab
@@ -12898,16 +12897,16 @@ class MulNode(NumBinopNode):
                 return self.analyse_sequence_mul(env, operand1, operand2)
             elif operand2.is_sequence_constructor and operand2.mult_factor is None:
                 return self.analyse_sequence_mul(env, operand2, operand1)
-            elif operand1.type in builtin_sequence_types:
+            elif Builtin.is_sequence_type(operand1.type) :
                 self.operand2 = operand2.coerce_to_index(env)
-            elif operand2.type in builtin_sequence_types:
+            elif Builtin.is_sequence_type(operand2.type) :
                 self.operand1 = operand1.coerce_to_index(env)
 
         return self.analyse_operation(env)
 
     @staticmethod
     def is_builtin_seqmul_type(type):
-        return type.is_builtin_type and type in builtin_sequence_types and type is not memoryview_type
+        return type.is_builtin_type and Builtin.is_sequence_type(type) and type is not memoryview_type
 
     def calculate_is_sequence_mul(self):
         type1 = self.operand1.type

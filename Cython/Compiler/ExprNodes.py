@@ -12897,9 +12897,9 @@ class MulNode(NumBinopNode):
                 return self.analyse_sequence_mul(env, operand1, operand2)
             elif operand2.is_sequence_constructor and operand2.mult_factor is None:
                 return self.analyse_sequence_mul(env, operand2, operand1)
-            elif Builtin.is_sequence_type(operand1.type) :
+            elif Builtin.is_sequence_type(operand1.type):
                 self.operand2 = operand2.coerce_to_index(env)
-            elif Builtin.is_sequence_type(operand2.type) :
+            elif Builtin.is_sequence_type(operand2.type):
                 self.operand1 = operand1.coerce_to_index(env)
 
         return self.analyse_operation(env)

@@ -4467,11 +4467,11 @@ class IndexNode(_IndexingBaseNode):
             else:
                 # not using 'uchar' to enable fast and safe error reporting as '-1'
                 self.type = PyrexTypes.c_int_type
-        elif is_slice and base_type in (bytes_type, bytearray_type, unicode_type) or base_type.is_list_type or base_type.is_tuple_type:
+        elif is_slice and (base_type in (bytes_type, bytearray_type, unicode_type) or base_type.is_list_type or base_type.is_tuple_type):
             self.type = base_type
         else:
             item_type = None
-            if is_int_indexing and base_type.is_list_type or base_type.is_tuple_type:
+            if is_int_indexing and (base_type.is_list_type or base_type.is_tuple_type):
                 item_type = infer_sequence_item_type(env, self.base, self.index, seq_type=base_type)
             elif self.base.is_literal:
                 # Infer homogeneous item type when looping over container literals.

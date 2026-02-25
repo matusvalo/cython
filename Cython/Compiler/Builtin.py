@@ -878,7 +878,7 @@ def init_builtins():
 
 init_builtins()
 
-def is_sequence_type(typ: PyrexTypes.PyrexType | None) -> bool:
+def is_sequence_type(typ) -> bool:
     if typ:
         return (
             typ in (bytes_type, unicode_type, bytearray_type, memoryview_type) or

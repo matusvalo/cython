@@ -170,6 +170,7 @@ class PyrexType(BaseType):
     #  is_ptr                boolean     Is a C pointer type
     #  is_null_ptr           boolean     Is the type of NULL
     #  is_reference          boolean     Is a C reference type
+    #  is_fake_reference     boolean
     #  is_rvalue_reference   boolean     Is a C++ rvalue reference type
     #  is_const              boolean     Is a C const type
     #  is_volatile           boolean     Is a C volatile type
@@ -190,6 +191,13 @@ class PyrexType(BaseType):
     #  is_returncode         boolean     Is used only to signal exceptions
     #  is_error              boolean     Is the dummy error type
     #  is_buffer             boolean     Is buffer access type
+    #  is_ctuple
+    #  is_tuple_type
+    #  is_list_type
+    #  is_dict_type
+    #  is_set_type
+    #  is_frozenset_type
+    #  is_memoryviewslice
     #  is_pythran_expr       boolean     Is Pythran expr
     #  is_numpy_buffer       boolean     Is Numpy array buffer
     #  is_unowned_view       boolean     Is a pointer or a C++ class such as std::string_view
@@ -266,11 +274,23 @@ class PyrexType(BaseType):
     is_error = 0
     is_buffer = 0
     is_ctuple = 0
+
+    is_int_type = False
+    is_float_type = False
+    is_bool_type = False
+    is_complex_type = False
+
     is_tuple_type = False
     is_list_type = False
     is_dict_type = False
     is_set_type = False
     is_frozenset_type = False
+
+    is_bytes_type = False
+    is_str_type = False
+    is_bytearray_type = False
+    is_memoryview_type = False
+
     is_memoryviewslice = 0
     is_pythran_expr = 0
     is_numpy_buffer = 0
@@ -283,6 +303,18 @@ class PyrexType(BaseType):
     equivalent_type = None
     default_value = ""
     declaration_value = ""
+
+    @property
+    def is_c_or_cpp_string(self) -> bool:
+        return self.is_string or self.is_cpp_string
+
+    @property
+    def is_bytes_or_str_or_bytearray(self) -> bool:
+        return self.is_bytes_type or self.is_str_type or self.is_bytearray_type
+
+    @property
+    def is_bytes_or_str(self) -> bool:
+        return self.is_bytes_type or self.is_str_type
 
     def resolve(self):
         # If a typedef, returns the base type.
@@ -1463,6 +1495,58 @@ class BuiltinObjectType(PyObjectType):
         if is_exception_type_name(name):
             self.is_exception_type = True
             self.require_exact = False
+
+    @property
+    def is_int_type(self) -> bool:
+        return self.name == 'int'
+
+    @property
+    def is_float_type(self) -> bool:
+        return self.name == 'float'
+
+    @property
+    def is_bool_type(self) -> bool:
+        return self.name == 'bool'
+
+    @property
+    def is_complex_type(self) -> bool:
+        return self.name == 'complex'
+
+    @property
+    def is_list_type(self) -> bool:
+        return self.name == 'list'
+
+    @property
+    def is_dict_type(self) -> bool:
+        return self.name == 'dict'
+
+    @property
+    def is_set_type(self) -> bool:
+        return self.name == 'set'
+
+    @property
+    def is_tuple_type(self) -> bool:
+        return self.name == 'tuple'
+
+    @property
+    def is_frozenset_type(self) -> bool:
+        return self.name == 'frozenset'
+
+    @property
+    def is_bytes_type(self) -> bool:
+        return self.name == 'bytes'
+
+    @property
+    def is_str_type(self) -> bool:
+        return self.name == 'str'
+    
+    @property
+    def is_bytearray_type(self) -> bool:
+        return self.name == 'bytearray'
+    
+    @property
+    def is_memoryview_type(self) -> bool:
+        return self.name == 'memoryview'
 
     def set_scope(self, scope):
         self.scope = scope
@@ -4858,25 +4942,6 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
     builtin types like list, dict etc which can be subscripted in annotations
     """
 
-    @property
-    def is_list_type(self) -> bool:
-        return self.name == 'list'
-
-    @property
-    def is_dict_type(self) -> bool:
-        return self.name == 'dict'
-    
-    @property
-    def is_set_type(self) -> bool:
-        return self.name == 'set'
-    
-    @property
-    def is_tuple_type(self) -> bool:
-        return self.name == 'tuple'
-
-    @property
-    def is_frozenset_type(self) -> bool:
-        return self.name == 'frozenset'
 
     def __init__(self, name, cname, objstruct_cname=None):
         super().__init__(

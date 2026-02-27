@@ -192,11 +192,11 @@ class PyrexType(BaseType):
     #  is_error              boolean     Is the dummy error type
     #  is_buffer             boolean     Is buffer access type
     #  is_ctuple
-    #  is_tuple_type
-    #  is_list_type
-    #  is_dict_type
-    #  is_set_type
-    #  is_frozenset_type
+    #  is_tuple
+    #  is_list
+    #  is_dict
+    #  is_set
+    #  is_frozenset
     #  is_memoryviewslice
     #  is_pythran_expr       boolean     Is Pythran expr
     #  is_numpy_buffer       boolean     Is Numpy array buffer
@@ -275,21 +275,21 @@ class PyrexType(BaseType):
     is_buffer = 0
     is_ctuple = 0
 
-    is_int_type = False
-    is_float_type = False
-    is_bool_type = False
-    is_complex_type = False
+    is_pyint = False
+    is_pyfloat = False
+    is_pybool = False
+    is_pycomplex = False
 
-    is_tuple_type = False
-    is_list_type = False
-    is_dict_type = False
-    is_set_type = False
-    is_frozenset_type = False
+    is_tuple = False
+    is_list = False
+    is_dict = False
+    is_set = False
+    is_frozenset = False
 
-    is_bytes_type = False
-    is_str_type = False
-    is_bytearray_type = False
-    is_memoryview_type = False
+    is_bytes = False
+    is_pystr = False
+    is_bytearray = False
+    is_memoryview = False
 
     is_memoryviewslice = 0
     is_pythran_expr = 0
@@ -310,11 +310,11 @@ class PyrexType(BaseType):
 
     @property
     def is_bytes_or_str_or_bytearray(self) -> bool:
-        return self.is_bytes_type or self.is_str_type or self.is_bytearray_type
+        return self.is_bytes or self.is_pystr or self.is_bytearray
 
     @property
     def is_bytes_or_str(self) -> bool:
-        return self.is_bytes_type or self.is_str_type
+        return self.is_bytes or self.is_pystr
 
     def resolve(self):
         # If a typedef, returns the base type.
@@ -1483,19 +1483,19 @@ class BuiltinObjectType(PyObjectType):
     decl_type = 'PyObject'
 
     _builtin_type_flag_mapping = {
-        'int': 'is_int_type',
-        'float': 'is_float_type',
-        'bool': 'is_bool_type',
-        'complex': 'is_complex_type',
-        'list': 'is_list_type',
-        'dict': 'is_dict_type',
-        'set': 'is_set_type',
-        'tuple': 'is_tuple_type',
-        'frozenset': 'is_frozenset_type',
-        'bytes': 'is_bytes_type',
-        'str': 'is_str_type',
-        'bytearray': 'is_bytearray_type',
-        'memoryview': 'is_memoryview_type',
+        'int': 'is_pyint',
+        'float': 'is_pyfloat',
+        'bool': 'is_pybool',
+        'complex': 'is_pycomplex',
+        'list': 'is_list',
+        'dict': 'is_dict',
+        'set': 'is_set',
+        'tuple': 'is_tuple',
+        'frozenset': 'is_frozenset',
+        'bytes': 'is_bytes',
+        'str': 'is_pystr',
+        'bytearray': 'is_bytearray',
+        'memoryview': 'is_memoryview',
     }
 
     def __init__(self, name, cname, objstruct_cname=None):

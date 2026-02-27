@@ -882,7 +882,7 @@ def is_sequence_type(typ) -> bool:
     if typ:
         return (
             typ in (bytes_type, unicode_type, bytearray_type, memoryview_type) or
-            typ.is_list_type or typ.is_tuple_type
+            typ.is_list or typ.is_tuple
         )
     return False
 

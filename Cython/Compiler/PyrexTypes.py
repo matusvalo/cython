@@ -1482,6 +1482,22 @@ class BuiltinObjectType(PyObjectType):
     is_external = True
     decl_type = 'PyObject'
 
+    _builtin_type_flag_mapping = {
+        'int': 'is_int_type',
+        'float': 'is_float_type',
+        'bool': 'is_bool_type',
+        'complex': 'is_complex_type',
+        'list': 'is_list_type',
+        'dict': 'is_dict_type',
+        'set': 'is_set_type',
+        'tuple': 'is_tuple_type',
+        'frozenset': 'is_frozenset_type',
+        'bytes': 'is_bytes_type',
+        'str': 'is_str_type',
+        'bytearray': 'is_bytearray_type',
+        'memoryview': 'is_memoryview_type',
+    }
+
     def __init__(self, name, cname, objstruct_cname=None):
         self.name = name
         self.typeptr_cname = "(%s)" % cname
@@ -1495,58 +1511,11 @@ class BuiltinObjectType(PyObjectType):
         if is_exception_type_name(name):
             self.is_exception_type = True
             self.require_exact = False
-
-    @property
-    def is_int_type(self) -> bool:
-        return self.name == 'int'
-
-    @property
-    def is_float_type(self) -> bool:
-        return self.name == 'float'
-
-    @property
-    def is_bool_type(self) -> bool:
-        return self.name == 'bool'
-
-    @property
-    def is_complex_type(self) -> bool:
-        return self.name == 'complex'
-
-    @property
-    def is_list_type(self) -> bool:
-        return self.name == 'list'
-
-    @property
-    def is_dict_type(self) -> bool:
-        return self.name == 'dict'
-
-    @property
-    def is_set_type(self) -> bool:
-        return self.name == 'set'
-
-    @property
-    def is_tuple_type(self) -> bool:
-        return self.name == 'tuple'
-
-    @property
-    def is_frozenset_type(self) -> bool:
-        return self.name == 'frozenset'
-
-    @property
-    def is_bytes_type(self) -> bool:
-        return self.name == 'bytes'
-
-    @property
-    def is_str_type(self) -> bool:
-        return self.name == 'str'
+        self._init_builtin_type_flags(name)
     
-    @property
-    def is_bytearray_type(self) -> bool:
-        return self.name == 'bytearray'
-    
-    @property
-    def is_memoryview_type(self) -> bool:
-        return self.name == 'memoryview'
+    def _init_builtin_type_flags(self, type_name: str) -> None:
+            if type_name in self._builtin_type_flag_mapping:
+                setattr(self, self._builtin_type_flag_mapping[type_name], True)
 
     def set_scope(self, scope):
         self.scope = scope

@@ -878,14 +878,6 @@ def init_builtins():
 
 init_builtins()
 
-def is_sequence_type(typ) -> bool:
-    if typ:
-        return (
-            typ in (bytes_type, unicode_type, bytearray_type, memoryview_type) or
-            typ.is_list or typ.is_tuple
-        )
-    return False
-
 ##############################
 # Support for a few standard library modules that Cython understands (currently typing and dataclasses)
 ##############################

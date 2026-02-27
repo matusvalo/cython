@@ -12897,16 +12897,16 @@ class MulNode(NumBinopNode):
                 return self.analyse_sequence_mul(env, operand1, operand2)
             elif operand2.is_sequence_constructor and operand2.mult_factor is None:
                 return self.analyse_sequence_mul(env, operand2, operand1)
-            elif Builtin.is_sequence_type(operand1.type):
+            elif operand1.type and operand1.type.is_sequence:
                 self.operand2 = operand2.coerce_to_index(env)
-            elif Builtin.is_sequence_type(operand2.type):
+            elif operand2.type and operand2.type.is_sequence:
                 self.operand1 = operand1.coerce_to_index(env)
 
         return self.analyse_operation(env)
 
     @staticmethod
     def is_builtin_seqmul_type(type):
-        return type.is_builtin_type and not type.is_memoryview and Builtin.is_sequence_type(type)
+        return type.is_builtin_type and not type.is_memoryview and type.is_sequence
 
     def calculate_is_sequence_mul(self):
         type1 = self.operand1.type

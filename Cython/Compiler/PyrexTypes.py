@@ -320,6 +320,10 @@ class PyrexType(BaseType):
     def is_bytes_or_str(self) -> bool:
         return self.is_bytes or self.is_pystr
 
+    @property
+    def is_sequence(self) -> bool:
+        return self.is_bytes or self.is_pystr or self.is_bytearray or self.is_memoryview or self.is_list or self.is_tuple
+
     def resolve(self):
         # If a typedef, returns the base type.
         return self

@@ -4918,8 +4918,6 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
     """
     builtin types like list, dict etc which can be subscripted in annotations
     """
-
-
     def __init__(self, name, cname, objstruct_cname=None):
         super().__init__(
             name, cname, objstruct_cname=objstruct_cname)

@@ -12906,7 +12906,7 @@ class MulNode(NumBinopNode):
 
     @staticmethod
     def is_builtin_seqmul_type(type):
-        return type.is_builtin_type and Builtin.is_sequence_type(type) and not type.is_memoryview_type
+        return type.is_builtin_type and not type.is_memoryview_type and Builtin.is_sequence_type(type)
 
     def calculate_is_sequence_mul(self):
         type1 = self.operand1.type

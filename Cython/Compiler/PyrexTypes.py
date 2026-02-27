@@ -191,13 +191,17 @@ class PyrexType(BaseType):
     #  is_returncode         boolean     Is used only to signal exceptions
     #  is_error              boolean     Is the dummy error type
     #  is_buffer             boolean     Is buffer access type
-    #  is_ctuple
-    #  is_tuple
-    #  is_list
-    #  is_dict
-    #  is_set
-    #  is_frozenset
-    #  is_memoryviewslice
+    #  is_ctuple             boolean     Is a Cython ctuple type
+    #  is_tuple              boolean     Is a Python tuple type
+    #  is_list               boolean     Is a Python list type
+    #  is_dict               boolean     Is a Python dict type
+    #  is_set                boolean     Is a Python set type
+    #  is_frozenset          boolean     Is a Python frozenset type
+    #  is_bytes              boolean     Is a Python bytes type
+    #  is_pystr              boolean     Is a Python str type
+    #  is_bytearray          boolean     Is a Python bytearray type
+    #  is_memoryview         boolean     Is a Python memoryview type
+    #  is_memoryviewslice    boolean     Is a Cython memoryview slice type
     #  is_pythran_expr       boolean     Is Pythran expr
     #  is_numpy_buffer       boolean     Is Numpy array buffer
     #  is_unowned_view       boolean     Is a pointer or a C++ class such as std::string_view

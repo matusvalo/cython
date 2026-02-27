@@ -1862,7 +1862,7 @@ class EarlyReplaceBuiltinCalls(Visitor.EnvTransform):
         if len(pos_args) > 1:
             self._error_wrong_arg_count('float', node, pos_args, 1)
         arg_type = getattr(pos_args[0], 'type', None)
-        if arg_type is PyrexTypes.c_double_type or arg_type.is_float_type:
+        if arg_type and (arg_type is PyrexTypes.c_double_type or arg_type.is_float_type):
             return pos_args[0]
         return node
 

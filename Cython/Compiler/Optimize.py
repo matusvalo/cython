@@ -225,7 +225,7 @@ class IterationTransform(Visitor.EnvTransform):
             if annotation.is_subscript:
                 annotation = annotation.base  # container base type
 
-        if (iterable.type and iterable.type.is_dict) or (annotation_type and annotation_type.is_dict):
+        if (iterable.type and iterable.type.is_pydict) or (annotation_type and annotation_type.is_pydict):
             # like iterating over dict.keys()
             if reversed:
                 # CPython raises an error here: not a sequence
@@ -234,8 +234,8 @@ class IterationTransform(Visitor.EnvTransform):
                 node, dict_obj=iterable, method=None, keys=True, values=False)
 
         if (
-            (iterable.type and (iterable.type.is_set or iterable.type.is_frozenset)) or 
-            (annotation_type and (annotation_type.is_set or annotation_type.is_frozenset))
+            (iterable.type and (iterable.type.is_pyset or iterable.type.is_pyfrozenset)) or
+            (annotation_type and (annotation_type.is_pyset or annotation_type.is_pyfrozenset))
         ):
             if reversed:
                 # CPython raises an error here: not a sequence
@@ -293,14 +293,14 @@ class IterationTransform(Visitor.EnvTransform):
             iterable = iterable.analyse_types(env).coerce_to(carray_type, env)
             return self._transform_carray_iteration(node, iterable, reversed=reversed)
 
-        if iterable.type.is_bytes:
+        if iterable.type.is_pybytes:
             return self._transform_bytes_iteration(node, iterable, reversed=reversed)
         if iterable.type.is_pystr:
             return self._transform_unicode_iteration(node, iterable, reversed=reversed)
 
         # in principle _transform_indexable_iteration would work on most of the above, and
         # also tuple and list. However, it probably isn't quite as optimized
-        if iterable.type.is_bytearray:
+        if iterable.type.is_pybytearray:
             return self._transform_indexable_iteration(node, iterable, is_mutable=True, reversed=reversed)
         if iterable.type.is_memoryviewslice:
             return self._transform_indexable_iteration(node, iterable, is_mutable=False, reversed=reversed)
@@ -393,7 +393,7 @@ class IterationTransform(Visitor.EnvTransform):
         arg = args[0]
 
         # reversed(list/tuple) ?
-        if arg.type.is_tuple or arg.type.is_list:
+        if arg.type.is_pytuple or arg.type.is_pylist:
             node.iterator.sequence = arg.as_none_safe_node("'NoneType' object is not iterable")
             node.iterator.reversed = True
             return node
@@ -576,7 +576,7 @@ class IterationTransform(Visitor.EnvTransform):
 
     def _transform_bytes_iteration(self, node, slice_node, reversed=False):
         target_type = node.target.type
-        if not target_type.is_int and not target_type.is_bytes:
+        if not target_type.is_int and not target_type.is_pybytes:
             # bytes iteration returns bytes objects in Py2, but
             # integers in Py3
             return node
@@ -1144,7 +1144,7 @@ class IterationTransform(Visitor.EnvTransform):
             method_node = ExprNodes.NullNode(dict_obj.pos)
             dict_obj = dict_obj.as_none_safe_node("'NoneType' object is not iterable")
 
-        is_dict = ExprNodes.IntNode.for_int(node.pos, int(dict_obj.type.is_dict))
+        is_dict = ExprNodes.IntNode.for_int(node.pos, int(dict_obj.type.is_pydict))
 
         result_code = [
             Nodes.SingleAssignmentNode(
@@ -1229,7 +1229,7 @@ class IterationTransform(Visitor.EnvTransform):
         iter_next_node = iter_next_node.analyse_expressions(self.current_env())
         body.stats[0:0] = [iter_next_node]
 
-        is_set = ExprNodes.IntNode.for_int(node.pos, int(set_obj.type.is_set))
+        is_set = ExprNodes.IntNode.for_int(node.pos, int(set_obj.type.is_pyset))
 
         result_code = [
             Nodes.SingleAssignmentNode(
@@ -1684,7 +1684,7 @@ class DropRefcountingTransform(Visitor.VisitorTransform):
             name_path.append(obj_node.name)
             names.append( ('.'.join(name_path[::-1]), node) )
         elif node.is_subscript:
-            if not node.base.type.is_list:
+            if not node.base.type.is_pylist:
                 return False
             if not node.index.type.is_int:
                 return False
@@ -1980,7 +1980,7 @@ class EarlyReplaceBuiltinCalls(Visitor.EnvTransform):
             return node
 
         arg = pos_args[0]
-        if isinstance(arg, ExprNodes.ComprehensionNode) and arg.type.is_list:
+        if isinstance(arg, ExprNodes.ComprehensionNode) and arg.type.is_pylist:
             list_node = arg
 
         elif isinstance(arg, ExprNodes.GeneratorExpressionNode):
@@ -2011,7 +2011,7 @@ class EarlyReplaceBuiltinCalls(Visitor.EnvTransform):
             list_node = ExprNodes.PythonCapiCallNode(
                 node.pos,
                 "__Pyx_PySequence_ListKeepNew"
-                    if arg.result_in_temp() and (arg.type is PyrexTypes.py_object_type or arg.type.is_list)
+                    if arg.result_in_temp() and (arg.type is PyrexTypes.py_object_type or arg.type.is_pylist)
                     else "PySequence_List",
                 self.PySequence_List_func_type,
                 args=pos_args, is_temp=True)
@@ -2169,7 +2169,7 @@ class EarlyReplaceBuiltinCalls(Visitor.EnvTransform):
 
         result_node = ExprNodes.InlinedGeneratorExpressionNode(
             node.pos, gen_expr_node,
-            orig_func='set' if target_type.is_set else 'list',
+            orig_func='set' if target_type.is_pyset else 'list',
             comprehension_type=target_type)
 
         for yield_expression, yield_stat_node in yield_statements:
@@ -2601,7 +2601,7 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
         if len(pos_args) != 1:
             return node
         arg = pos_args[0]
-        if arg.type.is_dict:
+        if arg.type.is_pydict:
             arg = arg.as_none_safe_node("'NoneType' is not iterable")
             return ExprNodes.PythonCapiCallNode(
                 node.pos, "PyDict_Copy", self.PyDict_Copy_func_type,
@@ -2624,7 +2624,7 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
             node.pos,
             "__Pyx_PySequence_ListKeepNew"
                 if (node.result_in_temp() and arg.result_in_temp() and
-                    (arg.type is PyrexTypes.py_object_type or arg.type.is_list))
+                    (arg.type is PyrexTypes.py_object_type or arg.type.is_pylist))
                 else "PySequence_List",
             self.PySequence_List_func_type,
             args=pos_args,
@@ -2642,9 +2642,9 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
         if len(pos_args) != 1 or not node.result_in_temp():
             return node
         arg = pos_args[0]
-        if arg.type.is_tuple and not arg.may_be_none():
+        if arg.type.is_pytuple and not arg.may_be_none():
             return arg
-        if arg.type.is_list:
+        if arg.type.is_pylist:
             pos_args[0] = arg.as_none_safe_node(
                 "'NoneType' object is not iterable")
 
@@ -2699,7 +2699,7 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
             pos_args = [ExprNodes.NullNode(node.pos)]
         elif len(pos_args) > 1:
             return node
-        elif pos_args[0].type.is_frozenset and not pos_args[0].may_be_none():
+        elif pos_args[0].type.is_pyfrozenset and not pos_args[0].may_be_none():
             return pos_args[0]
         # PyFrozenSet_New(it) is better than a generic Python call to frozenset(it)
         return ExprNodes.PythonCapiCallNode(
@@ -2746,10 +2746,10 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
         arg = pos_args[0].as_none_safe_node(
             "float() argument must be a string or a number, not 'NoneType'")
 
-        if func_arg.type.is_bytes:
+        if func_arg.type.is_pybytes:
             cfunc_name = "__Pyx_PyBytes_AsDouble"
             utility_code_name = 'pybytes_as_double'
-        elif func_arg.type.is_bytearray:
+        elif func_arg.type.is_pybytearray:
             cfunc_name = "__Pyx_PyByteArray_AsDouble"
             utility_code_name = 'pybytes_as_double'
         elif func_arg.type.is_pystr:
@@ -4050,7 +4050,7 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
             string_node = string_node.arg
 
         string_type = string_node.type
-        if string_type.is_bytes or string_type.is_bytearray:
+        if string_type.is_pybytes or string_type.is_pybytearray:
             if is_unbound_method:
                 string_node = string_node.as_none_safe_node(
                     "descriptor '%s' requires a '%s' object but received a 'NoneType'",
@@ -4126,7 +4126,7 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
                 stop = ExprNodes.IntNode(node.pos, value='PY_SSIZE_T_MAX',
                                          constant_result=ExprNodes.not_a_constant)
             helper_func_type = self._decode_bytes_func_type
-            if string_type.is_bytes:
+            if string_type.is_pybytes:
                 utility_code_name = 'decode_bytes'
             else:
                 utility_code_name = 'decode_bytearray'
@@ -4191,7 +4191,7 @@ class OptimizeBuiltinCalls(Visitor.NodeRefCleanupMixin,
             encoding = node.value.decode('ISO-8859-1')
             node = ExprNodes.BytesNode(
                 node.pos, value=node.value, type=PyrexTypes.c_const_char_ptr_type)
-        elif node.type.is_bytes:
+        elif node.type.is_pybytes:
             encoding = None
             node = node.coerce_to(PyrexTypes.c_const_char_ptr_type, self.current_env())
         elif node.type.is_string:
@@ -4869,7 +4869,7 @@ class ConstantFolding(Visitor.VisitorTransform, SkipDeclarations):
         """Unpack *args in place if we can."""
         self.visitchildren(node)
 
-        is_set = node.type.is_set
+        is_set = node.type.is_pyset
         args = []
         values = []
 
@@ -5057,13 +5057,13 @@ class ConstantFolding(Visitor.VisitorTransform, SkipDeclarations):
         self.visitchildren(node)
         if isinstance(node.loop, Nodes.StatListNode) and not node.loop.stats:
             # loop was pruned already => transform into literal
-            if node.type.is_list:
+            if node.type.is_pylist:
                 return ExprNodes.ListNode(
                     node.pos, args=[], constant_result=[])
-            elif node.type.is_set:
+            elif node.type.is_pyset:
                 return ExprNodes.SetNode(
                     node.pos, args=[], constant_result=set())
-            elif node.type.is_dict:
+            elif node.type.is_pydict:
                 return ExprNodes.DictNode(
                     node.pos, key_value_pairs=[], constant_result={})
         return node

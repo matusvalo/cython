@@ -192,14 +192,14 @@ class PyrexType(BaseType):
     #  is_error              boolean     Is the dummy error type
     #  is_buffer             boolean     Is buffer access type
     #  is_ctuple             boolean     Is a Cython ctuple type
-    #  is_tuple              boolean     Is a Python tuple type
-    #  is_list               boolean     Is a Python list type
-    #  is_dict               boolean     Is a Python dict type
-    #  is_set                boolean     Is a Python set type
-    #  is_frozenset          boolean     Is a Python frozenset type
-    #  is_bytes              boolean     Is a Python bytes type
+    #  is_pytuple              boolean     Is a Python tuple type
+    #  is_pylist               boolean     Is a Python list type
+    #  is_pydict               boolean     Is a Python dict type
+    #  is_pyset                boolean     Is a Python set type
+    #  is_pyfrozenset          boolean     Is a Python frozenset type
+    #  is_pybytes              boolean     Is a Python bytes type
     #  is_pystr              boolean     Is a Python str type
-    #  is_bytearray          boolean     Is a Python bytearray type
+    #  is_pybytearray          boolean     Is a Python bytearray type
     #  is_memoryview         boolean     Is a Python memoryview type
     #  is_memoryviewslice    boolean     Is a Cython memoryview slice type
     #  is_pythran_expr       boolean     Is Pythran expr
@@ -284,15 +284,15 @@ class PyrexType(BaseType):
     is_pybool = False
     is_pycomplex = False
 
-    is_tuple = False
-    is_list = False
-    is_dict = False
-    is_set = False
-    is_frozenset = False
+    is_pytuple = False
+    is_pylist = False
+    is_pydict = False
+    is_pyset = False
+    is_pyfrozenset = False
 
-    is_bytes = False
+    is_pybytes = False
     is_pystr = False
-    is_bytearray = False
+    is_pybytearray = False
     is_memoryview = False
 
     is_memoryviewslice = 0
@@ -314,15 +314,15 @@ class PyrexType(BaseType):
 
     @property
     def is_bytes_or_str_or_bytearray(self) -> bool:
-        return self.is_bytes or self.is_pystr or self.is_bytearray
+        return self.is_pybytes or self.is_pystr or self.is_pybytearray
 
     @property
     def is_bytes_or_str(self) -> bool:
-        return self.is_bytes or self.is_pystr
+        return self.is_pybytes or self.is_pystr
 
     @property
     def is_sequence(self) -> bool:
-        return self.is_bytes or self.is_pystr or self.is_bytearray or self.is_memoryview or self.is_list or self.is_tuple
+        return self.is_pybytes or self.is_pystr or self.is_pybytearray or self.is_memoryview or self.is_pylist or self.is_pytuple
 
     def resolve(self):
         # If a typedef, returns the base type.
@@ -1495,14 +1495,14 @@ class BuiltinObjectType(PyObjectType):
         'float': 'is_pyfloat',
         'bool': 'is_pybool',
         'complex': 'is_pycomplex',
-        'list': 'is_list',
-        'dict': 'is_dict',
-        'set': 'is_set',
-        'tuple': 'is_tuple',
-        'frozenset': 'is_frozenset',
-        'bytes': 'is_bytes',
+        'list': 'is_pylist',
+        'dict': 'is_pydict',
+        'set': 'is_pyset',
+        'tuple': 'is_pytuple',
+        'frozenset': 'is_pyfrozenset',
+        'bytes': 'is_pybytes',
         'str': 'is_pystr',
-        'bytearray': 'is_bytearray',
+        'bytearray': 'is_pybytearray',
         'memoryview': 'is_memoryview',
     }
 

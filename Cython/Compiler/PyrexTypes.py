@@ -4972,27 +4972,33 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         self.set_python_type_constructor_name(self.get_container_type().name)
         self.specializations = {}
 
-    def _init_builtin_type_flags(self, type_name: str) -> None:
-        # ensure correct flag is set for subscripted types, e.g. list[int]
-        super()._init_builtin_type_flags(self.get_container_type().name)
-
     def specialize_here(self, pos, env, template_values=None):
         if not self.supports_container_type:
             return self
         if template_values and None not in template_values and len(template_values) <= 2:
-            subscripted_types = ','.join([str(tv) for tv in template_values])
-            name = f'{self.get_container_type().name}[{subscripted_types}]'
+            name = self._full_type_name(self.get_container_type().name, template_values)
 
             if name in self.specializations:
                 return self.specializations[name]
 
             typ = BuiltinTypeConstructorObjectType(
-                name=name, cname=self.cname, objstruct_cname=self.objstruct_cname,
+                name=self.name, cname=self.cname, objstruct_cname=self.objstruct_cname,
                 base_type=self, subscripted_types=tuple(template_values), scope=self.scope)
-            env.declare_type(name, typ, pos, cname=typ.cname)
+            typ.entry = self.entry
             self.specializations[name] = typ
             return typ
         return self
+
+    @staticmethod
+    def _full_type_name(name: str, subscripted_types) -> str:
+        subscripted_types = ','.join([str(tv) for tv in subscripted_types])
+        return f"{name}[{subscripted_types}]" if subscripted_types else name
+
+    def __str__(self):
+        if self.subscripted_types:
+            return f"{self._full_type_name(self.name, self.subscripted_types)} object"
+        else:
+            return super().__str__()
 
     def assignable_from(self, src_type):
         if self.get_container_type() is src_type.get_container_type():

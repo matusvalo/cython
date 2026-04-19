@@ -4962,15 +4962,12 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
     """
 
     def __init__(self, name, cname, objstruct_cname=None, **kwargs):
-        # We need to ensure that the base_type attribute is set before calling super().__init__()
-        # to ensure that _init_builtin_type_flags() has base_type available.
-        for attr_name, value in kwargs.items():
-            setattr(self, attr_name, value)
-
         super().__init__(
             name, cname, objstruct_cname=objstruct_cname)
         self.set_python_type_constructor_name(self.get_container_type().name)
         self.specializations = {}
+        for attr_name, value in kwargs.items():
+            setattr(self, attr_name, value)
 
     def specialize_here(self, pos, env, template_values=None):
         if not self.supports_container_type:

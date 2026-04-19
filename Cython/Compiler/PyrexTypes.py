@@ -4989,7 +4989,7 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
             typ = BuiltinTypeConstructorObjectType(
                 name=name, cname=self.cname, objstruct_cname=self.objstruct_cname,
                 base_type=self, subscripted_types=tuple(template_values), scope=self.scope)
-            env.global_scope().declare_type(name, typ, pos, cname=typ.cname)
+            env.declare_type(name, typ, pos, cname=typ.cname)
             self.specializations[name] = typ
             return typ
         return self

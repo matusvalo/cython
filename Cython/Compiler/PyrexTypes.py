@@ -4965,7 +4965,6 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         super().__init__(
             name, cname, objstruct_cname=objstruct_cname)
         self.set_python_type_constructor_name(self.get_container_type().name)
-        self.specializations = {}
         for attr_name, value in kwargs.items():
             setattr(self, attr_name, value)
 
@@ -4973,16 +4972,10 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         if not self.supports_container_type:
             return self
         if template_values and None not in template_values and len(template_values) <= 2:
-            name = self._full_type_name(self.get_container_type().name, template_values)
-
-            if name in self.specializations:
-                return self.specializations[name]
-
             typ = BuiltinTypeConstructorObjectType(
                 name=self.name, cname=self.cname, objstruct_cname=self.objstruct_cname,
                 base_type=self, subscripted_types=tuple(template_values), scope=self.scope)
             typ.entry = self.entry
-            self.specializations[name] = typ
             return typ
         return self
 

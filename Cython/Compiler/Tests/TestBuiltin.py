@@ -12,6 +12,7 @@ from Cython.Compiler.Symtab import ModuleScope
 
 from ..Code import (
     KNOWN_PYTHON_BUILTINS_VERSION, KNOWN_PYTHON_BUILTINS,
+    uncachable_builtins,
 )
 
 from ...TestUtils import TimedTest
@@ -22,9 +23,19 @@ class TestBuiltinReturnTypes(TimedTest):
         # It's enough to test the method existence in a recent Python that likely has them.
         scope = ModuleScope('test', None, None)
         look_up_methods = sys.version_info >= (3,10)
+        min_versions = {
+            'frozendict': (3, 15, 0, 'alpha', 7),
+            'sentinel': (3, 15, 0, 'beta', 1),
+        }
 
         for type_name, methods in inferred_method_return_types.items():
-            py_type = getattr(builtins, type_name if type_name != 'unicode' else 'str')
+            try:
+                py_type = getattr(builtins, type_name if type_name != 'unicode' else 'str')
+            except AttributeError:
+                if sys.version_info >= min_versions.get(type_name, ()):
+                    raise
+                print(f"Skipping builtin type '{type_name}' as it is not in 'builtins'")
+                continue
 
             for method_name, return_type_name in methods.items():
                 builtin_type = builtin_scope.lookup(type_name).type
@@ -72,6 +83,8 @@ class TestBuiltinCompatibility(TimedTest):
         if sys.version_info < KNOWN_PYTHON_BUILTINS_VERSION:
             missing_builtins = expected_builtins - runtime_builtins
             if missing_builtins:
+                missing_from_uncachable = missing_builtins - set(uncachable_builtins)
+                self.assertSetEqual(missing_from_uncachable, set())
                 self.skipTest(f'skipping test, older Python release found. Missing builtins: {", ".join(sorted(missing_builtins))}')
             self.skipTest('skipping test, older Python release found.')
         self.assertSetEqual(runtime_builtins, expected_builtins)

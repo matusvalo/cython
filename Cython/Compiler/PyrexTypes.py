@@ -203,6 +203,7 @@ class PyrexType(BaseType):
     #  is_pytuple_type       boolean     Is a Python tuple type
     #  is_pylist_type        boolean     Is a Python list type
     #  is_pydict_type        boolean     Is a Python dict type
+    #  is_pyfrozendict_type  boolean     Is a Python frozendict type
     #  is_pyset_type         boolean     Is a Python set type
     #  is_pyfrozenset_type   boolean     Is a Python frozenset type
     #  is_pybytes_type       boolean     Is a Python bytes type
@@ -295,6 +296,7 @@ class PyrexType(BaseType):
     is_pytuple_type = False
     is_pylist_type = False
     is_pydict_type = False
+    is_pyfrozendict_type = False
     is_pyset_type = False
     is_pyfrozenset_type = False
 
@@ -1487,6 +1489,7 @@ _special_type_check_functions = {
     'str': 'PyUnicode_Check',
     'bytearray': 'PyByteArray_Check',
     'frozenset': 'PyFrozenSet_Check',
+    'frozendict': '__Pyx_PyFrozenDict_Check',
     'memoryview': 'PyMemoryView_Check',
     'Exception': '__Pyx_PyException_Check',
     'BaseException': '__Pyx_PyBaseException_Check',
@@ -1518,6 +1521,7 @@ class BuiltinObjectType(PyObjectType):
         'complex': ['is_pycomplex_type'],
         'list': ['is_pylist_type', 'is_builtin_sequence', 'supports_container_type'],
         'dict': ['is_pydict_type', 'supports_container_type'],
+        'frozendict': ['is_pyfrozendict_type', 'supports_container_type'],
         'set': ['is_pyset_type', 'supports_container_type'],
         'tuple': ['is_pytuple_type', 'is_builtin_sequence'],
         'frozenset': ['is_pyfrozenset_type', 'supports_container_type'],
@@ -4984,6 +4988,16 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         subscripted_types = ','.join([str(tv) for tv in subscripted_types])
         return f"{name}[{subscripted_types}]" if subscripted_types else name
 
+    def __eq__(self, value):
+        return (
+            isinstance(value, BuiltinTypeConstructorObjectType) and
+            self.name == value.name and
+            self.subscripted_types == value.subscripted_types
+        )
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(tuple(self.subscripted_types))
+
     def __str__(self):
         if self.subscripted_types:
             return f"{self._full_type_name(self.name, self.subscripted_types)} object"
@@ -4992,9 +5006,8 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
 
     def assignable_from(self, src_type):
         if self.get_container_type() is src_type.get_container_type():
-            if not self.subscripted_types and not src_type.subscripted_types:
-                return True
-            if not self.subscripted_types and src_type.subscripted_types:
+            if not self.subscripted_types:
+                # Assignment to unqualified type is always fine, e.g. list[int] -> list
                 return True
             if self.subscripted_types and not src_type.subscripted_types:
                 return True
@@ -5008,7 +5021,8 @@ class BuiltinTypeConstructorObjectType(BuiltinObjectType, PythonTypeConstructorM
         return super().assignable_from(src_type)
 
     def infer_indexed_type(self):
-        if self.get_container_type().is_pydict_type:
+        container_type = self.get_container_type()
+        if container_type.is_pydict_type or container_type.is_pyfrozendict_type:
             return self.get_subscripted_type(1)
         else:
             return self.get_subscripted_type(0)
@@ -5727,6 +5741,10 @@ def independent_spanning_type(type1, type2):
         # e.g. PyInt + double => object
         return py_object_type
     elif resolved_type1.is_builtin_type and resolved_type2.is_builtin_type:
+        container_type = resolved_type1.get_container_type()
+        if container_type is not None and container_type == resolved_type2.get_container_type():
+            # list[float] + list[int] => list
+            return container_type
         # Either numeric or incompatible. Do not try to find a widest Python type
         # (e.g. int+float => float) as it would change one of the result types.
         return py_object_type

@@ -663,7 +663,7 @@ inferred_method_return_types['frozenset'].update(inferred_method_return_types['s
 
 
 def find_return_type_of_builtin_method(pos, env, builtin_type, method_name):
-    type_name = tn if (tn := builtin_type.get_container_type()) else builtin_type.name
+    type_name = tn.name if (tn := builtin_type.get_container_type()) else builtin_type.name
     subscripted_types = ()
     if type_name in inferred_method_return_types:
         methods = inferred_method_return_types[type_name]

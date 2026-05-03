@@ -43,11 +43,9 @@ class TestBuiltinReturnTypes(TimedTest):
 
                 if return_type.is_builtin_type:
                     if '[' in return_type_name:
-                        subscripted_type_names = return_type_name.partition('[')[2].partition(']')[0].split(',')
-                        subscripted_type_names = [type_name if t == 'T' else t for t in subscripted_type_names]
+                        origin_type_name, _, subscripted_type_names = return_type_name[:-1].partition('[')
+                        subscripted_type_names = [type_name if t == 'T' else t for t in subscripted_type_names.split(',')]
                         subscripted_types = [builtin_scope.lookup(t).type for t in subscripted_type_names]
-
-                        origin_type_name = return_type_name.partition('[')[0]
                         origin_type = builtin_scope.lookup(origin_type_name).type
                         ft = origin_type.specialize_here(0, test_module_scope, subscripted_types)
 

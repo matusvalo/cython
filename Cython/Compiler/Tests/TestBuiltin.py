@@ -21,12 +21,12 @@ from ...TestUtils import TimedTest
 class TestBuiltinReturnTypes(TimedTest):
     def test_find_return_type_of_builtin_method(self):
         # It's enough to test the method existence in a recent Python that likely has them.
-        test_module_scope = ModuleScope('test', None, None)
         look_up_methods = sys.version_info >= (3,10)
         min_versions = {
             'frozendict': (3, 15, 0, 'alpha', 7),
             'sentinel': (3, 15, 0, 'beta', 1),
         }
+        test_module_scope = ModuleScope('test', None, None)
 
         for type_name, methods in inferred_method_return_types.items():
             try:

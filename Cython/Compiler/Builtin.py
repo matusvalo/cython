@@ -675,7 +675,7 @@ def find_return_type_of_builtin_method(pos, env, builtin_type, method_name):
             if return_type_name == 'T':
                 return builtin_type
             if return_type_name == 'I':
-                return indexed_type if (indexed_type := builtin_type.infer_indexed_type()) else PyrexTypes.py_object_type
+                return builtin_type.infer_indexed_type() or PyrexTypes.py_object_type
             if 'T' in subscripted_types:
                 subscripted_types = subscripted_types.replace('T', builtin_type.name)
             if return_type_name == 'bint':

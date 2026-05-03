@@ -21,7 +21,7 @@ from ...TestUtils import TimedTest
 class TestBuiltinReturnTypes(TimedTest):
     def test_find_return_type_of_builtin_method(self):
         # It's enough to test the method existence in a recent Python that likely has them.
-        scope = ModuleScope('test', None, None)
+        test_module_scope = ModuleScope('test', None, None)
         look_up_methods = sys.version_info >= (3,10)
         min_versions = {
             'frozendict': (3, 15, 0, 'alpha', 7),
@@ -39,7 +39,7 @@ class TestBuiltinReturnTypes(TimedTest):
 
             for method_name, return_type_name in methods.items():
                 builtin_type = builtin_scope.lookup(type_name).type
-                return_type = find_return_type_of_builtin_method(1, scope, builtin_type, method_name)
+                return_type = find_return_type_of_builtin_method(1, test_module_scope, builtin_type, method_name)
 
                 if return_type.is_builtin_type:
                     if '[' in return_type_name:
@@ -49,7 +49,7 @@ class TestBuiltinReturnTypes(TimedTest):
 
                         origin_type_name = return_type_name.partition('[')[0]
                         origin_type = builtin_scope.lookup(origin_type_name).type
-                        ft = origin_type.specialize_here(0, scope, subscripted_types)
+                        ft = origin_type.specialize_here(0, test_module_scope, subscripted_types)
 
                         return_type_name = origin_type_name if origin_type_name == 'tuple' else ft.name
                     if return_type_name == 'T':

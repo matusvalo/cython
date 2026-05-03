@@ -670,8 +670,7 @@ def find_return_type_of_builtin_method(pos, env, builtin_type, method_name):
         if method_name in methods:
             return_type_name = methods[method_name]
             if '[' in return_type_name:
-                subscripted_types = return_type_name.partition('[')[2].partition(']')[0]
-                return_type_name = return_type_name.partition('[')[0]
+                return_type_name, _, subscripted_types = return_type_name[:-1].partition('[')
             if return_type_name == 'T':
                 return builtin_type
             if return_type_name == 'I':

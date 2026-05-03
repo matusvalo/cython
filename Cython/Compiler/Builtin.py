@@ -497,7 +497,7 @@ types_that_construct_their_instance = frozenset({
 # When updating this mapping, also update "unsafe_compile_time_methods" below
 # if methods are added that are not safe to evaluate at compile time.
 # 'T' - type identical to type in dictionary key
-# 'I' - type from index - e.g. for list[int], I is `int`
+# 'I' - type from subscript - e.g. for list[int], I is `int`
 inferred_method_return_types = {
     'complex': dict(
         conjugate='complex',

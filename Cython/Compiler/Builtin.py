@@ -556,7 +556,7 @@ inferred_method_return_types = {
         ljust='T',
         lower='T',
         lstrip='T',
-        maketrans='dict[int,int]',  # staticmethod
+        maketrans='dict[int,object]',  # staticmethod
         partition='tuple[T,T,T]',
         removeprefix='T',
         removesuffix='T',
@@ -684,7 +684,8 @@ def find_return_type_of_builtin_method(pos, env, builtin_type, method_name):
                 return PyrexTypes.c_py_ssize_t_type
             container_type = builtin_scope.lookup(return_type_name).type
             if subscripted_type_names:
-                subscripted_types = [builtin_scope.lookup(t).type for t in subscripted_type_names.split(',')]
+                subscripted_type_entries = [builtin_scope.lookup(t) for t in subscripted_type_names.split(',')]
+                subscripted_types = [e.type if e else PyrexTypes.py_object_type for e in subscripted_type_entries]
                 container_type = container_type.specialize_here(pos, env, subscripted_types)
             return container_type
     return PyrexTypes.py_object_type

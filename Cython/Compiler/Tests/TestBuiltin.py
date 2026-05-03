@@ -9,6 +9,7 @@ from ..Builtin import (
     builtin_scope,
 )
 from ..Symtab import ModuleScope
+from ..PyrexTypes import py_object_type
 
 from ..Code import (
     KNOWN_PYTHON_BUILTINS_VERSION, KNOWN_PYTHON_BUILTINS,
@@ -51,7 +52,8 @@ class TestBuiltinReturnTypes(TimedTest):
                             return_type_name = origin_type_name
                         else:
                             subscripted_type_names = [type_name if t == 'T' else t for t in subscripted_type_names.split(',')]
-                            subscripted_types = [builtin_scope.lookup(t).type for t in subscripted_type_names]
+                            subscripted_type_entries = [builtin_scope.lookup(t) for t in subscripted_type_names]
+                            subscripted_types = [e.type if e else py_object_type for e in subscripted_type_entries]
                             origin_type = builtin_scope.lookup(origin_type_name).type
                             return_type_name = origin_type.specialize_here(
                                 pos=None, env=test_module_scope, template_values=subscripted_types

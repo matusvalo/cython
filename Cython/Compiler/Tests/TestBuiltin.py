@@ -8,7 +8,7 @@ from ..Builtin import (
     unsafe_compile_time_methods, is_safe_compile_time_method,
     builtin_scope,
 )
-from Cython.Compiler.Symtab import ModuleScope
+from ..Symtab import ModuleScope
 
 from ..Code import (
     KNOWN_PYTHON_BUILTINS_VERSION, KNOWN_PYTHON_BUILTINS,

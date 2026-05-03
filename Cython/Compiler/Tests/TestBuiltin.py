@@ -44,12 +44,14 @@ class TestBuiltinReturnTypes(TimedTest):
                 if return_type.is_builtin_type:
                     if '[' in return_type_name:
                         origin_type_name, _, subscripted_type_names = return_type_name[:-1].partition('[')
-                        subscripted_type_names = [type_name if t == 'T' else t for t in subscripted_type_names.split(',')]
-                        subscripted_types = [builtin_scope.lookup(t).type for t in subscripted_type_names]
-                        origin_type = builtin_scope.lookup(origin_type_name).type
-                        ft = origin_type.specialize_here(0, test_module_scope, subscripted_types)
-
-                        return_type_name = origin_type_name if origin_type_name == 'tuple' else ft.name
+                        if origin_type_name == 'tuple':
+                            # Currently, cython does not support tuple with subscript
+                            return_type_name = origin_type_name
+                        else:
+                            subscripted_type_names = [type_name if t == 'T' else t for t in subscripted_type_names.split(',')]
+                            subscripted_types = [builtin_scope.lookup(t).type for t in subscripted_type_names]
+                            origin_type = builtin_scope.lookup(origin_type_name).type
+                            return_type_name = origin_type.specialize_here(0, test_module_scope, subscripted_types).name
                     if return_type_name == 'T':
                         return_type_name = type_name
 

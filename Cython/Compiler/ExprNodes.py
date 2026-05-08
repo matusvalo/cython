@@ -4509,9 +4509,13 @@ class IndexNode(_IndexingBaseNode):
         self.wrap_in_nonecheck_node(env, getting)
 
         if base_type.supports_container_type and (sub_type := base_type.infer_indexed_type()):
-            self.type = base_type
-            return self.coerce_to(sub_type, env)
+            coerced_type = self.coerce_to(sub_type, env)
+            if setting and 'PyTypeTestNode' in str(coerced_type):
+                self.type = sub_type
+                return self
 
+            self.type = base_type
+            return coerced_type
         return self
 
     def analyse_as_c_array(self, env, is_slice):

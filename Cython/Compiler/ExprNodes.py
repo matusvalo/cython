@@ -9108,9 +9108,9 @@ class TupleNode(SequenceNode):
     def infer_type(self, env):
         if self.mult_factor or not self.args:
             return tuple_type
+        # if any(arg.is_starred for arg in self.args):
+        #     return tuple_type
         arg_types = [arg.infer_type(env) for arg in self.args]
-        if any(arg.is_starred for arg in self.args):
-            return tuple_type
         if any(type.is_pyobject or type.is_memoryviewslice or type.is_unspecified or type.is_fused
                for type in arg_types):
             return tuple_type.specialize_here(self.pos, env, arg_types)

@@ -417,7 +417,7 @@ class AbstractUtilityCode:
 
     requires = None
 
-    def put_code(self, globalstate: "GlobalState", used_by=None) -> None:
+    def put_code(self, globalstate: GlobalState, used_by=None) -> None:
         pass
 
     def get_tree(self, **kwargs):
@@ -865,7 +865,7 @@ class UtilityCode(UtilityCodeBase):
             f"moddict_cname should not be shared: {self}"
 
     @cython.final
-    def _put_code_section(self, writer: "CCodeWriter", output: "GlobalState", code_type: str, used_by=None):
+    def _put_code_section(self, writer: CCodeWriter, output: GlobalState, code_type: str, used_by=None):
         code_string = getattr(self, code_type)
         if not code_string:
             return
@@ -895,14 +895,14 @@ class UtilityCode(UtilityCodeBase):
         writer.putln("  " + writer.error_goto_if_PyErr(output.module_pos))
         writer.putln()
 
-    def _put_shared_function_declarations(self, code: "CCodeWriter") -> None:
+    def _put_shared_function_declarations(self, code: CCodeWriter) -> None:
         code.putln(f'/* {self.name} */')
         for shared in self.shared_utility_functions:
             # Convert function declarations to static function pointers.
             code.putln(f'static {shared.ret}(*{shared.name})({shared.params}); /*proto*/')
         code.putln()
 
-    def put_code(self, globalstate: "GlobalState", used_by=None) -> None:
+    def put_code(self, globalstate: GlobalState, used_by=None) -> None:
         has_shared_utility_code = bool(
             self.shared_utility_functions and globalstate.module_node.scope.context.shared_utility_qualified_name
         )
@@ -941,7 +941,7 @@ def add_macro_processor(*macro_names, regex=None, is_module_specific=False, _las
 
     def build_processor(func):
         @wraps(func)
-        def process(utility_code: UtilityCode, output, code_string: str):
+        def process(utility_code: UtilityCode, output: GlobalState, code_string: str):
             # First, call the processing chain in FIFO function definition order.
             result_is_module_specific = False
             if last_processor is not None:
@@ -1006,7 +1006,7 @@ def _format_impl_code(utility_code: UtilityCode, _, impl):
         r'\)'
     ),
 )
-def _inject_unbound_method(output, matchobj):
+def _inject_unbound_method(output: GlobalState, matchobj):
     """Replace 'UNBOUND_METHOD(type, "name")' by a constant Python identifier cname.
     """
     is_typeptr, type_cname, method_name, obj_cname, args = matchobj.groups()
@@ -1024,7 +1024,7 @@ def _inject_unbound_method(output, matchobj):
     is_module_specific=True,
     regex=r'PY(IDENT|UNICODE)\("([^"]+)"\)',
 )
-def _inject_string_constant(output, matchobj):
+def _inject_string_constant(output: GlobalState, matchobj):
     """Replace 'PYIDENT("xyz")' by a constant Python identifier cname.
     """
     str_type, name = matchobj.groups()
@@ -1134,7 +1134,7 @@ class LazyUtilityCode(UtilityCodeBase):
     def __init__(self, callback):
         self.callback = callback
 
-    def put_code(self, globalstate: "GlobalState", used_by=None) -> None:
+    def put_code(self, globalstate: GlobalState, used_by=None) -> None:
         utility = self.callback(globalstate.rootwriter)
         globalstate.use_utility_code(utility, used_by=used_by)
 
@@ -1276,7 +1276,7 @@ class FunctionState:
 
     # temp handling
 
-    def allocate_temp(self, type, manage_ref, static=False, reusable=True):
+    def allocate_temp(self, type, manage_ref: bool, static: bool = False, reusable: bool = True):
         """
         Allocates a temporary (which may create a new one or get a previously
         allocated and released one of the same type). Type is simply registered
@@ -1455,7 +1455,7 @@ class StringConst:
         self.py_strings = None
         self.c_used = False
 
-    def get_py_string_const(self, encoding, identifier=None):
+    def get_py_string_const(self, encoding, identifier=None) -> PyStringConst:
         text = self.text
         intern: cython.bint
         is_unicode: cython.bint
@@ -1548,11 +1548,10 @@ class GlobalState:
     # consts
     # interned_nums
 
-    # directives       set             Temporary variable used to track
+    # directives       dict            Temporary variable used to track
     #                                  the current set of directives in the code generation
     #                                  process.
 
-    directives = {}
 
     code_layout = [
         'h_code',
@@ -1609,6 +1608,7 @@ class GlobalState:
     ]
 
     def __init__(self, writer, module_node, code_config, common_utility_include_dir=None):
+        self.directives = {}
         self.filename_table = {}
         self.filename_list = []
         self.input_file_contents = {}
@@ -1783,7 +1783,7 @@ class GlobalState:
             self.initialised_constants.add(target)
         return self.parts['cached_constants']
 
-    def get_int_const(self, str_value, longness=False):
+    def get_int_const(self, str_value: str, longness=False) -> NumConst:
         py_type = longness and 'long' or 'int'
         try:
             c = self.num_const_index[(str_value, py_type)]
@@ -1791,14 +1791,14 @@ class GlobalState:
             c = self.new_num_const(str_value, py_type)
         return c
 
-    def get_float_const(self, str_value, value_code):
+    def get_float_const(self, str_value: str, value_code: str) -> NumConst:
         try:
             c = self.num_const_index[(str_value, 'float')]
         except KeyError:
             c = self.new_num_const(str_value, 'float', value_code)
         return c
 
-    def get_py_const(self, prefix, dedup_key=None):
+    def get_py_const(self, prefix, dedup_key=None) -> str:
         if dedup_key is not None:
             const = self.dedup_const_index.get(dedup_key)
             if const is not None:
@@ -1817,7 +1817,7 @@ class GlobalState:
         # aren't just Python objects
         return c
 
-    def get_string_const(self, text, c_used=True):
+    def get_string_const(self, text, c_used: cython.bint = True) -> StringConst:
         # return a C string constant, creating a new one if necessary
         if text.is_unicode:
             byte_string = text.utf8encode()
@@ -1831,7 +1831,7 @@ class GlobalState:
             c.c_used = True
         return c
 
-    def get_pyunicode_ptr_const(self, text):
+    def get_pyunicode_ptr_const(self, text) -> str:
         # return a Py_UNICODE[] constant, creating a new one if necessary
         assert text.is_unicode
         try:
@@ -1840,13 +1840,13 @@ class GlobalState:
             c = self.pyunicode_ptr_const_index[text] = self.new_const_cname()
         return c
 
-    def get_py_string_const(self, text, identifier=None):
+    def get_py_string_const(self, text, identifier=None) -> PyStringConst:
         # return a Python string constant, creating a new one if necessary
         c_string: StringConst = self.get_string_const(text, c_used=False)
         py_string = c_string.get_py_string_const(text.encoding, identifier)
         return py_string
 
-    def get_py_codeobj_const(self, node):
+    def get_py_codeobj_const(self, node) -> str:
         idx = len(self.codeobject_constants)
         name = f"{Naming.codeobjtab_cname}[{idx}]"
         self.codeobject_constants.append(node)
@@ -1855,24 +1855,24 @@ class GlobalState:
     def get_interned_identifier(self, text):
         return self.get_py_string_const(text, identifier=True)
 
-    def new_string_const(self, text, byte_string):
+    def new_string_const(self, text, byte_string) -> StringConst:
         cname = self.new_string_const_cname(byte_string)
         c = StringConst(cname, text, byte_string)
         self.string_const_index[byte_string] = c
         return c
 
-    def new_num_const(self, value, py_type, value_code=None):
+    def new_num_const(self, value: str, py_type: str, value_code=None) -> NumConst:
         cname = self.new_num_const_cname(value, py_type)
         c = NumConst(cname, value, py_type, value_code)
         self.num_const_index[(value, py_type)] = c
         return c
 
-    def new_string_const_cname(self, bytes_value):
+    def new_string_const_cname(self, bytes_value) -> str:
         # Create a new globally-unique nice name for a C string constant.
         value = bytes_value.decode('ASCII', 'ignore')
         return self.new_const_cname(value=value)
 
-    def unique_const_cname(self, format_str):  # type: (str) -> str
+    def unique_const_cname(self, format_str: str) -> str:
         used = self.const_cnames_used
         cname = value = format_str.format(sep='', counter='')
         while cname in used:
@@ -1881,7 +1881,7 @@ class GlobalState:
         used[cname] = 1
         return cname
 
-    def new_num_const_cname(self, value, py_type):  # type: (str, str) -> str
+    def new_num_const_cname(self, value: str, py_type) -> str:
         if py_type == 'long':
             value += 'L'
             py_type = 'int'
@@ -1896,7 +1896,7 @@ class GlobalState:
             cname = "%s%s" % (prefix, value)
         return cname
 
-    def new_const_cname(self, prefix='', value=''):
+    def new_const_cname(self, prefix: str = '', value: str = '') -> str:
         value = replace_identifier('_', value)[:32].strip('_')
         name_suffix = self.unique_const_cname(value + "{sep}{counter}")
         if prefix:
@@ -1905,12 +1905,12 @@ class GlobalState:
             prefix = Naming.const_prefix
         return "%s%s" % (prefix, name_suffix)
 
-    def new_array_const_cname(self, prefix: str):
+    def new_array_const_cname(self, prefix: str) -> str:
         count = self.const_array_counters.get(prefix, 0)
         self.const_array_counters[prefix] = count+1
         return f"{Naming.pyrex_prefix}{prefix}[{count}]"
 
-    def get_cached_unbound_method(self, type_cname, method_name):
+    def get_cached_unbound_method(self, type_cname, method_name) -> str:
         key = (type_cname, method_name)
         try:
             cname = self.cached_cmethods[key]
@@ -2052,15 +2052,17 @@ class GlobalState:
                 cleanup.putln(f"Py_CLEAR({init.name_in_main_c_code_module_state(cname)}.method);")
 
     def generate_string_constants(self):
-        c_consts = []
-        py_bytes_consts = []
-        py_unicode_consts = []
+        c_consts: list[tuple] = []
+        py_bytes_consts: list[tuple] = []
+        py_unicode_consts: list[tuple] = []
 
         # Split into buckets.
+        c: StringConst
         for _, _, c in sorted([(len(c.cname), c.cname, c) for c in self.string_const_index.values()]):
             if c.c_used:
                 c_consts.append((len(c.cname), c.cname, c.escaped_value))
             if c.py_strings:
+                py_string: PyStringConst
                 for py_string in c.py_strings.values():
                     text = c.text
                     if py_string.is_unicode and not isinstance(text, str):
@@ -2101,7 +2103,7 @@ class GlobalState:
 
         self.generate_pystring_constants(py_unicode_consts, py_bytes_consts)
 
-    def generate_pystring_constants(self, text_strings: list, byte_strings: list):
+    def generate_pystring_constants(self, text_strings: list[tuple], byte_strings: list[tuple]):
         # Concatenate all strings into one byte sequence and build a length index array.
         defines = self.parts['constant_name_defines']
 
@@ -2363,7 +2365,7 @@ class GlobalState:
         self._generate_module_array_traverse_and_clear(Naming.codeobjtab_cname, code_object_count, may_have_refcycles=False)
 
     def generate_num_constants(self):
-        consts = [(c.py_type, len(c.value.lstrip('-')), c.value.lstrip('-'), c.value, c.value_code, c)
+        consts: list[tuple] = [(c.py_type, len(c.value.lstrip('-')), c.value.lstrip('-'), c.value, c.value_code, c)
                   for c in self.num_const_index.values()]
         consts.sort()
         if not consts:
@@ -2374,9 +2376,9 @@ class GlobalState:
         # Numeric constants can never participate in reference cycles.
         self._generate_module_array_traverse_and_clear(Naming.numbertab_cname, constant_count, may_have_refcycles=False)
 
-        float_constants = []
-        int_constants_by_bytesize = [[]]  # [[1 byte], [2 bytes], [4 bytes], [8 bytes]]
-        large_constants = []
+        float_constants: list[tuple] = []
+        int_constants_by_bytesize: list[list[tuple]] = [[]]  # [[1 byte], [2 bytes], [4 bytes], [8 bytes]]
+        large_constants: list[tuple] = []
         int_constant_count = 0
         int_suffix = ''
 
@@ -2415,7 +2417,7 @@ class GlobalState:
             w.putln(f"numbertab[i] = {rhs_code};")
             w.putln(w.error_goto_if_null("numbertab[i]", error_pos))
 
-        def define_constants(defines, constants: list, start_offset: cython.Py_ssize_t = 0):
+        def define_constants(defines, constants: list[tuple], start_offset: cython.Py_ssize_t = 0):
             i: cython.Py_ssize_t
             c: tuple
             numbertab_cname: str = Naming.numbertab_cname
@@ -2697,7 +2699,7 @@ class CCodeWriter:
         result = CCodeWriter(create_from, buffer, copy_formatting)
         return result
 
-    def set_global_state(self, global_state):
+    def set_global_state(self, global_state: GlobalState):
         assert self.globalstate is None  # prevent overwriting once it's set
         self.globalstate = global_state
         self.code_config = global_state.code_config
@@ -2952,14 +2954,14 @@ class CCodeWriter:
             self.write_trace_line(pos)
 
     @cython.final
-    def write_trace_line(self, pos):
+    def write_trace_line(self, pos: tuple):
         if self.funcstate and self.funcstate.can_trace and self.globalstate.directives['linetrace']:
             self.indent()
             self._write_lines(
                 f'__Pyx_TraceLine({pos[1]:d},{self.pos_to_offset(pos):d},{not self.funcstate.gil_owned:d},{self.error_goto(pos)})\n')
 
     @cython.final
-    def _build_marker(self, pos):
+    def _build_marker(self, pos: tuple):
         source_desc, line, col = pos
         assert isinstance(source_desc, SourceDescriptor)
         contents = self.globalstate.commented_file_contents(source_desc)

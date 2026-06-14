@@ -80,6 +80,12 @@ cdef class FunctionState:
 
     cpdef list[tuple] temps_in_use(self)
 
+@cython.final
+cdef class NumConst:
+    cdef readonly object cname
+    cdef readonly object value
+    cdef readonly object py_type
+    cdef readonly object value_code
 
 @cython.final
 cdef class PyObjectConst:
@@ -92,10 +98,10 @@ cdef class StringConst:
     cdef readonly object cname
     cdef readonly object text
     cdef readonly object escaped_value
-    cdef readonly dict py_strings
+    cdef readonly dict[tuple, PyStringConst] py_strings
     cdef public bint c_used
 
-    cpdef get_py_string_const(self, encoding, identifier=*)
+    cpdef PyStringConst get_py_string_const(self, encoding, identifier=*)
 
 
 @cython.final
@@ -106,14 +112,54 @@ cdef class PyStringConst:
     cdef readonly bint intern
 
 
-#class GlobalState(object):
+cdef class GlobalState:
+    cdef public tuple module_pos
+    cdef public dict directives
+    cdef readonly list filename_list
+    cdef readonly set utility_codes
+    cdef readonly dict parts
+    cdef readonly list shared_utility_functions
+    cdef dict filename_table
+    cdef dict input_file_contents
+    cdef dict declared_cnames
+    cdef bint in_utility_code_generation
+    cdef object code_config
+    cdef object common_utility_include_dir
+    cdef public object module_node
+
+    cdef dict const_cnames_used
+    cdef dict[object, StringConst] string_const_index
+    cdef dict dedup_const_index
+    cdef dict pyunicode_ptr_const_index
+    cdef list codeobject_constants
+    cdef dict[tuple, object] num_const_index
+    cdef list[PyObjectConst] arg_default_constants
+    cdef dict const_array_counters
+    cdef dict cached_cmethods
+    cdef set initialised_constants
+
+    cdef object rootwriter
+
+    cdef StringConst get_string_const(self, text, bint c_used=*)
+    cdef PyStringConst get_py_string_const(self, text, identifier=*)
+    cdef str get_py_codeobj_const(self, node)
+    cdef StringConst new_string_const(self, text, byte_string)
+    cdef NumConst new_num_const(self, str value, str py_type, value_code=*)
+    cdef str new_string_const_cname(self, bytes_value)
+    cdef str unique_const_cname(self, str format_str)
+    cpdef str new_const_cname(self, str prefix=*, str value=*)
+    cdef str new_array_const_cname(self, str prefix)
+    cdef str get_cached_unbound_method(self, type_cname, method_name)
+    cpdef str get_py_const(self, prefix, dedup_key=*)
+    cdef NumConst get_int_const(self, str str_value, bint longness=*)
+    cdef NumConst get_float_const(self, str str_value, str value_code)
 
 #def funccontext_property(name):
 
 cdef class CCodeWriter(object):
     cdef readonly StringIOTree buffer
     cdef readonly list pyclass_stack
-    cdef readonly object globalstate
+    cdef readonly GlobalState globalstate
     cdef readonly FunctionState funcstate
     cdef object code_config
     cdef tuple last_pos

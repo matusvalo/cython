@@ -1718,7 +1718,7 @@ class FloatNode(ConstNode):
     def calculate_result_code(self):
         return self.result_code
 
-    def get_constant_c_result_code(self):
+    def get_constant_c_result_code(self) -> str:
         strval = self.value
         assert isinstance(strval, str)
         cmpval = repr(float(strval))

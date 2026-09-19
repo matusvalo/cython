@@ -17,7 +17,9 @@
 
 /////////////// CModulePreamble ///////////////
 
-#include <stddef.h> /* For offsetof */
+typedef int v4si __attribute__ ((vector_size (16)));
+
+#include <stddef.h>
 #ifndef offsetof
   #define offsetof(type, member) ( (size_t) & ((type*)0) -> member )
 #endif

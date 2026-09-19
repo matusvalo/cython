@@ -222,6 +222,8 @@ class PyrexType(BaseType):
     #                                    Largely used internally.
     #  refcounting_needs_gil boolean     Reference counting needs GIL to be acquired.
     #  supports_refnanny     boolean     This type can use refnanny to check its reference counting.
+    #  supports_container_type boolean   This type can be subscripted - e.g. list[int]
+    #  has_uniform_element_type boolean  This type has uniform subscripted types e.g. tuple[int, ...]
     #  equivalent_type       type        A C or Python type that is equivalent to this Python or C type.
     #  default_value         string      Initial value that can be assigned before first user assignment.
     #  declaration_value     string      The value statically assigned on declaration (if any).
@@ -1884,6 +1886,7 @@ class BuiltinObjectType(PyObjectType):
         'dict_keys': ['supports_container_type'],
         'dict_values': ['supports_container_type'],
         'dict_items': ['supports_container_type'],
+        'zip': ['supports_container_type'],
     }
     _builtin_type_flag_mapping.update(
         # Extended to set '.is_exception_type' for all builtin exception types.
@@ -3257,6 +3260,44 @@ class CPointerBaseType(CType):
             return '"%s"' % StringEncoding.escape_byte_string(value)
         return str(value)
 
+
+class CVectorType(CPointerBaseType):
+    #  base_type     CType              Element type
+    #  size          integer or None    Number of elements
+    is_array = 0
+    to_tuple_function = None
+    is_numeric = 1
+
+    def __init__(self, base_type, size):
+        super().__init__(base_type)
+        self.size = size
+
+    def declaration_code(self, entity_code,
+            for_display = 0, dll_linkage = None, pyrex = 0):
+        if self.size is not None:
+            dimension_code = self.size
+        else:
+            dimension_code = ""
+        if entity_code.startswith("*"):
+            entity_code = "(%s)" % entity_code
+        # breakpoint()
+        return self.base_declaration_code('v4si', entity_code)
+
+    def literal_code(self, value):
+    #     return str(value)
+        if isinstance(value, list):
+            lst = reduce(lambda x, y: f'{x}, {y}', value)
+            return f"{{{lst}}}"
+        else:
+            return str(value)
+
+
+    # def literal_code(self, value):
+    #     return f"=>>>>>>>>>>{value}<<<<<"
+
+        # return self.base_type.declaration_code(
+        #     "%s[%s]" % (entity_code, dimension_code),
+        #     for_display, dll_linkage, pyrex)
 
 class CArrayType(CPointerBaseType):
     #  base_type     CType              Element type
@@ -5851,6 +5892,10 @@ fixed_sign_int_types = {
     "ptrdiff_t":  (2, c_ptrdiff_t_type),
 }
 
+vector_name_to_type = {
+        "v4si": CVectorType(c_int_type, 4)
+    }
+
 modifiers_and_name_to_type = {
     #(signed, longness, name) : type
     (0,  0, "char"): c_uchar_type,
@@ -6353,7 +6398,12 @@ def simple_c_type(signed, longness, name):
     # Returns None if arguments don't make sense.
     return modifiers_and_name_to_type.get((signed, longness, name))
 
+def vector_c_type(name: str):
+    return vector_name_to_type.get(name, None)
+
 def parse_basic_type(name: str):
+    if (vector_type := vector_c_type(name)) is not None:
+        return vector_type
     base = None
     if name.startswith('p_'):
         base = parse_basic_type(name[2:])

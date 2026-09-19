@@ -2754,7 +2754,8 @@ class NameNode(AtomicExprNode):
                 # per entry and coupled with it.
                 self.generate_acquire_buffer(rhs, code)
             assigned = False
-            if self.type.is_const:
+            if self.type.is_const or (isinstance(self.type, PyrexTypes.CVectorType) and rhs.result() is None):
+                # breakpoint()
                 # Const variables are assigned when declared
                 assigned = True
             if self.type.is_pyobject:
@@ -4492,6 +4493,9 @@ class IndexNode(_IndexingBaseNode):
             return self.analyse_as_c_function(env)
         elif base_type.is_ctuple:
             return self.analyse_as_c_tuple(env, getting, setting)
+        elif isinstance(base_type, PyrexTypes.CVectorType):
+            return self.analyse_as_c_array(env, False)
+            # breakpoint()
         else:
             error(self.pos,
                   "Attempting to index non-array type '%s'" %
@@ -5937,6 +5941,7 @@ class SliceIndexNode(ExprNode):
 
     def generate_assignment_code(self, rhs, code, overloaded_assignment=False,
                                  exception_check=None, exception_value=None):
+        # breakpoint()
         self.generate_subexpr_evaluation_code(code)
         if self.type.is_pyobject:
             code.globalstate.use_utility_code(self.set_slice_utility_code)
@@ -5949,6 +5954,13 @@ class SliceIndexNode(ExprNode):
                     py_start, py_stop, py_slice,
                     has_c_start, has_c_stop,
                     bool(code.globalstate.directives['wraparound'])))
+        if isinstance(self.type, PyrexTypes.CVectorType):
+            code.putln("memcpy(&(%s), %s, sizeof(%s));" % (
+                self.base.result(),
+                rhs.result(),
+                self.base.result()
+            ))
+
         else:
             start_offset = self.start_code() if self.start else '0'
             if rhs.type.is_array:
@@ -5958,6 +5970,8 @@ class SliceIndexNode(ExprNode):
                 array_length = '%s - %s' % (self.stop_code(), start_offset)
 
             code.globalstate.use_utility_code(UtilityCode.load_cached("IncludeStringH", "StringTools.c"))
+            # memcpy assignment
+            # breakpoint()
             code.putln("memcpy(&(%s[%s]), %s, sizeof(%s[0]) * (%s));" % (
                 self.base.result(), start_offset,
                 rhs.result(),
@@ -6424,6 +6438,41 @@ class SimpleCallNode(CallNode):
     analysed = False
     overflowcheck = False
 
+# <<<<<<< Updated upstream
+# =======
+#     def infer_type(self, env):
+#         inferred_type = super().infer_type(env)
+#         function = self.function
+#         function_entry = getattr(function, 'entry', None)
+#         if function_entry is None:
+#             return inferred_type
+#         if not function_entry.type.supports_container_type:
+#             return inferred_type
+# 
+#         if not (inferred_type.supports_container_type and inferred_type.is_immutable):
+#             return inferred_type
+#         if not self.args or len(self.args) != 1:
+#             return inferred_type
+# 
+#         # if isinstance(self.args[0], (SetNode, DictNode, ListNode)):
+#         #     self.args[0].read_only = True
+#         param_type = self.args[0].infer_type(env)
+#         subscripted_types = ()
+#         if param_type.supports_container_type or param_type.is_ctuple:
+#             if (
+#                 function_entry.type != param_type.get_container_type() and
+#                 (function_entry.type.is_builtin_sequence or function_entry.type.is_pyanyset_type)
+#             ):
+#                 subscripted_types = (param_type.infer_iterator_type(), )
+#             else:
+#                 subscripted_types = param_type.subscripted_types
+#         if inferred_type.is_pytuple_type and not param_type.is_pytuple_type and len(subscripted_types) == 1:
+#             # tuple([1, 2]) should be type of tuple[int, ...]
+#             # tuple((1, 2)) should be type of tuple[int, int]
+#             subscripted_types += (Ellipsis,)
+#         return inferred_type.specialize_here(self.pos, env, subscripted_types)
+# 
+# >>>>>>> Stashed changes
     def compile_time_value(self, denv):
         function = self.function.compile_time_value(denv)
         args = [arg.compile_time_value(denv) for arg in self.args]
@@ -9375,7 +9424,12 @@ class ListNode(SequenceNode):
         return ()
 
     def infer_type(self, env):
-        # TODO: Infer non-object list arrays.
+# <<<<<<< Updated upstream
+#         # TODO: Infer non-object list arrays.
+# =======
+#         if self.args:
+#             return specialise_builtin_container_type(self.pos, env, list_type, self.args)
+# >>>>>>> Stashed changes
         return list_type
 
     def analyse_expressions(self, env):
@@ -9404,6 +9458,8 @@ class ListNode(SequenceNode):
                 error(self.pos, "Cannot coerce list to type '%s'" % dst_type)
         elif (dst_type.is_array or dst_type.is_ptr) and dst_type.base_type is not PyrexTypes.c_void_type:
             return self.as_carray(dst_type.base_type, env, is_const=dst_type.is_array)
+        elif (isinstance(dst_type, PyrexTypes.CVectorType)) and dst_type.base_type is not PyrexTypes.c_void_type:
+            return self.as_carray(dst_type.base_type, env, is_const=True)
         elif dst_type.is_cpp_class:
             # TODO(robertwb): Avoid object conversion for vector/list/set.
             return TypecastNode(self.pos, operand=self, type=PyrexTypes.py_object_type).coerce_to(dst_type, env)
@@ -9553,6 +9609,9 @@ class CArrayNode(ListNode):
             self._array_cname_temp = None
 
     def generate_operation_code(self, code):
+        # initialisation code is generated here: static int const __pyx_carray__2[4] = {1,2,3,4};
+        return
+        # breakpoint()
         all_const = self.type.base_type.is_const and all(arg.is_literal for arg in self.args)
         array_cname = self._allocate_carray(code, all_const)
 
@@ -9996,6 +10055,14 @@ class SetNode(ExprNode):
     read_only = False  # Can this safely be turned into an immutable frozenset?
     gil_message = "Constructing Python set"
 
+# <<<<<<< Updated upstream
+# =======
+#     def infer_type(self, env):
+#         if self.args:
+#             return specialise_builtin_container_type(self.pos, env, set_type, self.args)
+#         return set_type
+# 
+# >>>>>>> Stashed changes
     def analyse_types(self, env):
         for i in range(len(self.args)):
             arg = self.args[i]
@@ -10254,6 +10321,18 @@ class DictNode(ExprNode):
 
     def infer_type(self, env):
         # TODO: Infer struct constructors.
+# <<<<<<< Updated upstream
+# =======
+#         if self.key_value_pairs:
+#             key_type = PyrexTypes.reduce_spanning_types(
+#                 [item.key.infer_type(env) for item in self.key_value_pairs]
+#             )
+#             value_type = PyrexTypes.reduce_spanning_types(
+#                 [item.value.infer_type(env) for item in self.key_value_pairs]
+#             )
+#             if key_type is not py_object_type or value_type is not py_object_type:
+#                 return dict_type.specialize_here(self.pos, env, [key_type, value_type])
+# >>>>>>> Stashed changes
         return dict_type
 
     def analyse_types(self, env):
@@ -13243,6 +13322,8 @@ class AddNode(NumBinopNode):
 
     def compute_c_result_type(self, type1, type2):
         #print "AddNode.compute_c_result_type:", type1, self.operator, type2 ###
+        if isinstance(type1, PyrexTypes.CVectorType) and isinstance(type2, PyrexTypes.CVectorType):
+            return type1
         if (type1.is_ptr or type1.is_array) and (type2.is_int or type2.is_enum):
             return type1
         elif (type2.is_ptr or type2.is_array) and (type1.is_int or type1.is_enum):

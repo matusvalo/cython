@@ -540,6 +540,11 @@ def simply_type(result_type):
     result_type = PyrexTypes.remove_cv_ref(result_type, remove_fakeref=True)
     if result_type.is_array:
         result_type = PyrexTypes.c_ptr_type(result_type.base_type)
+    if result_type.supports_container_type and not result_type.is_immutable:
+        # When inferring type of mutable container, we must not infer
+        # subscripted types since container can have added objects with different
+        # type later during execution of code.
+        result_type = result_type.get_container_type()
     return result_type
 
 def aggressive_spanning_type(types, might_overflow, scope):

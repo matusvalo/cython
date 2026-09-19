@@ -2951,6 +2951,7 @@ class CCodeWriter:
             self.put('CYTHON_UNUSED ')
         if storage_class:
             self.put("%s " % storage_class)
+        # breakpoint()
         if entry.is_cpp_optional:
             self.put(entry.type.cpp_optional_declaration_code(
                 entry.cname, dll_linkage=dll_linkage))

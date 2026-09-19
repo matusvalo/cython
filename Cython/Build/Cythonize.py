@@ -133,13 +133,14 @@ def _build(ext_modules, parallel):
 
 
 def run_distutils(args):
-    try:
-        from distutils.core import setup
-    except ImportError:
-        try:
-            from setuptools import setup
-        except ImportError:
-            raise ImportError("'distutils' is not available. Please install 'setuptools' for binary builds.")
+    from setuptools import setup
+    # try:
+    #     from distutils.core import setup
+    # except ImportError:
+    #     try:
+    #         from setuptools import setup
+    #     except ImportError:
+    #         raise ImportError("'distutils' is not available. Please install 'setuptools' for binary builds.")
 
     base_dir, ext_modules = args
     script_args = ['build_ext', '-i']

@@ -6424,6 +6424,14 @@ class SingleAssignmentNode(AssignmentNode):
                 # cannot assign to C array, only to its full slice
                 lhs = ExprNodes.SliceIndexNode(self.lhs.pos, base=self.lhs, start=None, stop=None)
                 self.lhs = lhs.analyse_target_types(env)
+        elif isinstance(self.lhs.type, PyrexTypes.CVectorType):
+            # breakpoint()
+            # if not isinstance(self.lhs, ExprNodes.SliceIndexNode):
+            #     # cannot assign to C array, only to its full slice
+            #     lhs = ExprNodes.SliceIndexNode(self.lhs.pos, base=self.lhs, start=None, stop=None)
+            #     self.lhs = lhs.analyse_target_types(env)
+            if self.rhs.constant_result != ExprNodes.not_a_constant:
+                self.lhs.entry.init = self.rhs.constant_result
 
         if self.lhs.type.is_cpp_class:
             op = env.lookup_operator_for_types(self.pos, '=', [self.lhs.type, self.rhs.type])
